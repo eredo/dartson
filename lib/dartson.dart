@@ -3,17 +3,32 @@ library dartson;
 import 'dart:mirrors' as mirrors;
 import 'dart:json' as JSON;
 
-part 'exceptions.dart';
-part 'serializer.dart';
-part 'parser.dart';
+part 'src/exceptions.dart';
+part 'src/serializer.dart';
+part 'src/parser.dart';
 
+/**
+ * Set this to true to receive log output of dartson.
+ */
 bool DARTSON_DEBUG = false;
+
+/**
+ * Contains the description of each class which is has the annotation
+ * [DartsonEntity]. This map should be used in dart2js.
+ */
 Map<mirrors.ClassMirror,EntityDescription> ENTITY_MAP = null;
 
+/**
+ * Annotation class to mark a class as serializable. This is required
+ * if the dartson builder has to build an entity map for dart2js. 
+ */
 class DartsonEntity {
   const DartsonEntity();
 }
 
+/**
+ * Annotation class to describe properties of a class member.
+ */
 class DartsonProperty {
   final bool _ignore;
   final String name;
@@ -26,12 +41,18 @@ class DartsonProperty {
   String toString() => "DartsonProperty: Name: ${name} , Ignore: ${ignore}";
 }
 
+/**
+ * Container of the properties for a DartsonEntity in the [ENTITY_MAP].
+ */
 class EntityDescription {
   Map<String,EntityPropertyDescription> properties = {};
   
   EntityDescription();
 }
 
+/**
+ * Description of a class member of a DartsonEntity in the [ENTITY_MAP].
+ */
 class EntityPropertyDescription {
   final String name;
   final bool ignore;

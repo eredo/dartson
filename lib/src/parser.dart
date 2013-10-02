@@ -15,7 +15,9 @@ final Symbol _QN_MAP = mirrors.reflectClass(Map).qualifiedName;
  *  Throws [NoConstructorError] if [clazz] or Classes used inside [clazz] do not
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
- *  Throws [FormatException] if the [jsonStr] is not valid JSON text. 
+ *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
+ *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
+ *    the class. 
  */
 dynamic parse(String jsonStr, Type clazz) {
   mirrors.InstanceMirror obj = _initiateClass(mirrors.reflectClass(clazz));
@@ -28,14 +30,14 @@ dynamic parse(String jsonStr, Type clazz) {
 
 /**
  * Puts the data of the [filler] into the object in [objMirror]
- *  throws [IncorrectTypeTransform]
+ *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  */
 void _fillObject(mirrors.InstanceMirror objMirror, Map filler) {
   mirrors.ClassMirror classMirror = objMirror.type;
 
   classMirror.variables.forEach((sym, variable) {
     if (!variable.isPrivate && !variable.isStatic) {
-      String varName = mirrors.MirrorSystem.getName(sym);
+      String varName = _getName(sym);
       String fieldName = varName;
       DartsonProperty prop = _getProperty(variable);
       
@@ -56,7 +58,8 @@ void _fillObject(mirrors.InstanceMirror objMirror, Map filler) {
   
   classMirror.setters.forEach((sym, method) {
     if (!method.isPrivate && !method.isStatic) {
-      String varName = mirrors.MirrorSystem.getName(sym).replaceFirst("=", "");
+      // however names of setter functions contain a "=" at the end of the name
+      String varName = _getName(sym).replaceFirst("=", "");
       String fieldName = varName;
       DartsonProperty prop = _getProperty(method);
       
@@ -92,11 +95,11 @@ mirrors.TypeMirror _getTypeByEntityMap(mirrors.ClassMirror classMirror, String v
 /**
  * Transforms the value of a field [key] to the correct value.
  *  returns Deserialized value
- *  Throws [IncorrectTypeTransform]
- *  Throws [NoConstructorError]
+ *  Throws [IncorrectTypeTransform] if json data types doesn't match.
+ *  Throws [NoConstructorError] 
  */
 Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
-  _log("Convert \"${key}\": $value to ${mirrors.MirrorSystem.getName(valueType.qualifiedName)}");
+  _log("Convert \"${key}\": $value to ${_getName(valueType.qualifiedName)}");
   
   if (valueType.qualifiedName == _QN_STRING) {
     if (value is String) {
@@ -130,11 +133,8 @@ Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
     }
   } else if (_getName(valueType.qualifiedName) == "dynamic") {
     // dynamic is used in JavaScript runtime
-//    if (value is ) {
-      return value;
-//    } else {
-//      throw new IncorrectTypeTransform(value, "Map", key);
-//    }
+    // if this appears something went wrong
+    // TODO: Think of a correct way to handle this problem / exception?!
   } else {
     _log("Found individuell type is classmirror: ${valueType is mirrors.ClassMirror} ");
     var obj = _initiateClass(valueType);
@@ -142,7 +142,7 @@ Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
     if (value is Object && !(value is String) && !(value is num)  && !(value is bool)) {
       _fillObject(obj, value);
     } else {
-      throw new IncorrectTypeTransform(value, mirrors.MirrorSystem.getName(valueType.qualifiedName), key);
+      throw new IncorrectTypeTransform(value, _getName(valueType.qualifiedName), key);
     }
     
     return obj.reflectee;
@@ -153,7 +153,7 @@ Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
 
 /**
  * Initiates an instance of [classMirror] by using an empty constructor name.
- * Therefore the class needs to contain a simple constructor for example:
+ * Therefore the class needs to contain a simple constructor. For example:
  * <code>
  *  class TestClass {
  *    String name;
@@ -161,14 +161,16 @@ Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
  *    TestClass(); // or TestClass([this.name])
  *  }
  * </code>
+ *  Throws [NoConstructorError] if the class doesn't have a constructor without or
+ *    only with optional arguments.
  */
 mirrors.InstanceMirror _initiateClass(mirrors.ClassMirror classMirror) {
-  _log("Parsing to class: ${mirrors.MirrorSystem.getName(classMirror.qualifiedName)}");
+  _log("Parsing to class: ${_getName(classMirror.qualifiedName)}");
   Symbol constrMethod = null;
   
   if (classMirror.constructors != null) {
   classMirror.constructors.forEach((sym, method) {
-    _log("Checking constructor: \"${mirrors.MirrorSystem.getName(method.constructorName)}\"");
+    _log("Checking constructor: \"${_getName(method.constructorName)}\"");
     if (method.parameters.length == 0) {
       constrMethod = method.constructorName;
     } else {
@@ -189,10 +191,10 @@ mirrors.InstanceMirror _initiateClass(mirrors.ClassMirror classMirror) {
   
   mirrors.InstanceMirror obj;
   if (constrMethod != null) {
-    _log("Found constructor: \"${mirrors.MirrorSystem.getName(constrMethod)}\"");
+    _log("Found constructor: \"${_getName(constrMethod)}\"");
     obj = classMirror.newInstance(constrMethod, []);
     
-    _log("Created instance of type: ${mirrors.MirrorSystem.getName(obj.type.qualifiedName)}");
+    _log("Created instance of type: ${_getName(obj.type.qualifiedName)}");
   } else {
     _log("No constructor found.");
     throw new NoConstructorError(classMirror);     

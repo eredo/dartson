@@ -5,16 +5,16 @@ part of dartson;
  * a value of a different type.
  */
 class IncorrectTypeTransform extends Error {
-  String _field;
-  String _type;
-  String _foundType;
+  final String _field;
+  final String _type;
+  final String _foundType;
   
-  IncorrectTypeTransform(Object value, String type, [String key = "unknown"]) {
-    _type = type;
-    _field = key;
+  IncorrectTypeTransform(Object value, String type, [String key = "unknown"]) :
+    _type = type,
+    _field = key,
     _foundType = mirrors.MirrorSystem
         .getName(mirrors.reflect(value).type.qualifiedName); 
-  }
+
   
   String toString() => "IncorrectTypeTransform: Cannot transform field \"${_field}\" incorrect " +
       "type. Requires [${_type}] and found [${_foundType}]"; 
@@ -34,6 +34,10 @@ class NoConstructorError extends Error {
         "without arguments.";
 }
 
+/**
+ * This exception only appears in JavaScript if the [ENTITY_MAP] doesn't contain
+ * a description of a Class which dartson tries to parse.
+ */
 class EntityDescriptionMissing extends Error {
   final String _clazz;
   
