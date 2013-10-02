@@ -1,0 +1,225 @@
+        <!DOCTYPE html>
+        <html>
+        <head>
+                <meta charset="utf-8">
+        <title>dartson Library / Dart Documentation</title>
+        <link rel="stylesheet" type="text/css"
+            href="styles.css">
+        <link href="//fonts.googleapis.com/css?family=Open+Sans:400,600,700,800" rel="stylesheet" type="text/css">
+        <link rel="shortcut icon" href="favicon.ico">
+        
+        </head>
+        <body data-library="dartson">
+        <div class="page">
+        <div class="header">
+          <a href="index.html"><div class="logo"></div></a>
+          <a href="index.html">Dart Documentation</a>
+         &rsaquo; <a href="dartson.html">dartson</a>        <div id="search-box">
+          <input type="search" name="q" id="q" autocomplete="off"
+              class="search-input" placeholder="Search API">
+        </div>
+        
+      </div>
+      <div class="drop-down" id="drop-down"></div>
+      
+        <div class="nav">
+        
+</div>
+<div class="content">
+<h2><strong>dartson</strong> library</h2>
+<div>
+<h3>Properties</h3>
+<div class="field"><h4 id="DARTSON_DEBUG">
+<button class="show-code">Code</button>
+bool         <strong>DARTSON_DEBUG</strong> <a class="anchor-link"
+            href="#DARTSON_DEBUG"
+            title="Permalink to DARTSON_DEBUG">#</a>
+        </h4>
+        <div class="doc">
+<p>Set this to true to receive log output of dartson.</p>
+<pre class="source">
+bool DARTSON_DEBUG = false
+</pre>
+</div>
+</div>
+<div class="field"><h4 id="ENTITY_MAP">
+<button class="show-code">Code</button>
+Map&lt;ClassMirror, <a href="dartson/EntityDescription.html">EntityDescription</a>&gt;         <strong>ENTITY_MAP</strong> <a class="anchor-link"
+            href="#ENTITY_MAP"
+            title="Permalink to ENTITY_MAP">#</a>
+        </h4>
+        <div class="doc">
+<p>Contains the description of each class which is has the annotation
+<a class="crossref" href="dartson/DartsonEntity.html">DartsonEntity</a>. This map should be used in dart2js.</p>
+<pre class="source">
+Map&lt;mirrors.ClassMirror,EntityDescription&gt; ENTITY_MAP = null
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Functions</h3>
+<div class="method"><h4 id="parseList">
+<button class="show-code">Code</button>
+List <strong>parseList</strong>(String jsonStr, Type clazz) <a class="anchor-link" href="#parseList"
+              title="Permalink to parseList">#</a></h4>
+<div class="doc">
+<p>Creates a list with instances of 
+<span class="param">clazz</span> and puts the data of the parsed json
+of 
+<span class="param">jsonStr</span> into the instances.
+  Returns A list of objects of 
+<span class="param">clazz</span>.
+ Throws <a class="crossref" href="dartson/NoConstructorError.html">NoConstructorError</a> if 
+<span class="param">clazz</span> or Classes used inside 
+<span class="param">clazz</span> do not
+   have a constructor without or only optional arguments.
+ Throws <a class="crossref" href="dartson/IncorrectTypeTransform.html">IncorrectTypeTransform</a> if json data types doesn't match.
+ Throws <a class="crossref" href="dart_core/FormatException.html">FormatException</a> if the 
+<span class="param">jsonStr</span> is not valid JSON text.
+ Throws <a class="crossref" href="dartson/EntityDescriptionMissing.html">EntityDescriptionMissing</a> if <a class="crossref" href="dartson.html#ENTITY_MAP">ENTITY_MAP</a> is not null and doesn't contain
+   the class. </p>
+<pre class="source">
+List parseList(String jsonStr, Type clazz) {
+ List returnList = [];
+ List filler = JSON.parse(jsonStr);
+ filler.forEach((item) {
+   mirrors.InstanceMirror obj = _initiateClass(mirrors.reflectClass(clazz));
+   _fillObject(obj, item);
+   returnList.add(obj.reflectee);    
+ });
+ 
+ return returnList;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="parse">
+<button class="show-code">Code</button>
+dynamic <strong>parse</strong>(String jsonStr, Type clazz) <a class="anchor-link" href="#parse"
+              title="Permalink to parse">#</a></h4>
+<div class="doc">
+<p>Creates a new instance of 
+<span class="param">clazz</span>, parses the json in 
+<span class="param">jsonStr</span> and puts
+the data into the new instance.
+ Returns new instance of 
+<span class="param">clazz</span>
+ Throws <a class="crossref" href="dartson/NoConstructorError.html">NoConstructorError</a> if 
+<span class="param">clazz</span> or Classes used inside 
+<span class="param">clazz</span> do not
+   have a constructor without or only optional arguments.
+ Throws <a class="crossref" href="dartson/IncorrectTypeTransform.html">IncorrectTypeTransform</a> if json data types doesn't match.
+ Throws <a class="crossref" href="dart_core/FormatException.html">FormatException</a> if the 
+<span class="param">jsonStr</span> is not valid JSON text.
+ Throws <a class="crossref" href="dartson/EntityDescriptionMissing.html">EntityDescriptionMissing</a> if <a class="crossref" href="dartson.html#ENTITY_MAP">ENTITY_MAP</a> is not null and doesn't contain
+   the class. </p>
+<pre class="source">
+dynamic parse(String jsonStr, Type clazz) {
+ mirrors.InstanceMirror obj = _initiateClass(mirrors.reflectClass(clazz));
+ Map filler = JSON.parse(jsonStr);
+
+ _fillObject(obj, filler);
+
+ return obj.reflectee;
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="objectToSerializable">
+<button class="show-code">Code</button>
+Object <strong>objectToSerializable</strong>(Object obj) <a class="anchor-link" href="#objectToSerializable"
+              title="Permalink to objectToSerializable">#</a></h4>
+<div class="doc">
+<pre class="source">
+Object objectToSerializable(Object obj) {
+ if (obj is String || obj is num || obj is bool || obj == null) {
+   _log("Found primetive: $obj");
+   return obj;
+ } else if (obj is List) {
+   _log("Found list");
+   return _serializeList(obj);
+ } else if (obj is Map) {
+   _log("Found map");
+   return _serializeMap(obj);
+ } else {
+   _log("Found object");
+   return _serializeObject(obj);
+ }
+}
+</pre>
+</div>
+</div>
+<div class="method"><h4 id="serialize">
+<button class="show-code">Code</button>
+String <strong>serialize</strong>(Object object) <a class="anchor-link" href="#serialize"
+              title="Permalink to serialize">#</a></h4>
+<div class="doc">
+<p>Serializes the 
+<span class="param">object</span> to a JSON string.</p>
+<pre class="source">
+String serialize(Object object) {
+ _log("Start serializing");
+ return JSON.stringify(objectToSerializable(object));
+}
+</pre>
+</div>
+</div>
+</div>
+<div>
+<h3>Classes</h3>
+          <div class="type">
+          <h4>
+            <a href="dartson/DartsonEntity.html"><strong>DartsonEntity</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="dartson/DartsonProperty.html"><strong>DartsonProperty</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="dartson/EntityDescription.html"><strong>EntityDescription</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="dartson/EntityDescriptionMissing.html"><strong>EntityDescriptionMissing</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="dartson/EntityPropertyDescription.html"><strong>EntityPropertyDescription</strong></a>
+          </h4>
+          </div>
+          
+          <div class="type">
+          <h4>
+            <a href="dartson/IncorrectTypeTransform.html"><strong>IncorrectTypeTransform</strong></a>
+          </h4>
+          </div>
+          
+</div>
+<div>
+<h3>Exceptions</h3>
+          <div class="type">
+          <h4>
+            <a href="dartson/NoConstructorError.html"><strong>NoConstructorError</strong></a>
+          </h4>
+          </div>
+          
+</div>
+        </div>
+        <div class="clear"></div>
+        </div>
+        <div class="footer">
+          <div>This page was generated at 2013-10-02 14:36:36.106</div>
+        </div>
+        <script async src="client-live-nav.js"></script>
+        </body></html>
+        
