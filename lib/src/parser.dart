@@ -29,6 +29,29 @@ dynamic parse(String jsonStr, Type clazz) {
 }
 
 /**
+ * Creates a list with instances of [clazz] and puts the data of the parsed json
+ * of [jsonStr] into the instances.
+ *   Returns A list of objects of [clazz].
+ *  Throws [NoConstructorError] if [clazz] or Classes used inside [clazz] do not
+ *    have a constructor without or only optional arguments.
+ *  Throws [IncorrectTypeTransform] if json data types doesn't match.
+ *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
+ *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
+ *    the class. 
+ */
+List parseList(String jsonStr, Type clazz) {
+  List returnList = [];
+  List filler = JSON.parse(jsonStr);
+  filler.forEach((item) {
+    mirrors.InstanceMirror obj = _initiateClass(mirrors.reflectClass(clazz));
+    _fillObject(obj, item);
+    returnList.add(obj.reflectee);    
+  });
+  
+  return returnList;
+}
+
+/**
  * Puts the data of the [filler] into the object in [objMirror]
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  */
@@ -50,7 +73,14 @@ void _fillObject(mirrors.InstanceMirror objMirror, Map filler) {
           objMirror.setField(sym, _convertValue(_getTypeByEntityMap(classMirror, varName),
             filler[fieldName], varName));
         } else {
-          objMirror.setField(sym, _convertValue(variable.type, filler[fieldName], varName));
+//          if (DARTSON_DEBUG) {
+//            _log("${_getName(sym)}: original: ${variable.type.isOriginalDeclaration} " + 
+//                "reflected: ${variable.type.hasReflectedType} symbol: ${_getName(variable.type.qualifiedName)} " +
+//                "original: ${variable.type.reflectedType} is simple ${_isSimpleType(variable.type.reflectedType)}");
+//          }
+//          
+          _log("Set default field: ${_getName(sym)}");
+          objMirror.setField(sym, _convertValue(variable.type, filler[fieldName], varName)); 
         }
       }
     }
@@ -92,6 +122,53 @@ mirrors.TypeMirror _getTypeByEntityMap(mirrors.ClassMirror classMirror, String v
   }
 }
 
+bool _isSimpleType(Type type) {
+  return type == List || type == bool || type == String || type == num || type == Map || type == dynamic;
+}
+
+bool _hasOnlySimpleTypeArguments(mirrors.ClassMirror mirr) {
+  bool hasOnly = true;
+  
+  mirr.typeArguments.forEach((ta) {
+    if (ta is mirrors.ClassMirror) {
+      if (!_isSimpleType(ta.reflectedType)) {
+        hasOnly = false;
+      }
+    }
+  });
+  
+  return hasOnly;
+}
+
+/**
+ * Converts a list of objects to a list with a Class.
+ */
+List _convertGenericList(mirrors.ClassMirror listMirror, List fillerList) {
+  mirrors.ClassMirror itemMirror = listMirror.typeArguments[0];
+  mirrors.InstanceMirror resultList = _initiateClass(listMirror);
+  
+  fillerList.forEach((item) {
+    (resultList.reflectee as List).add(_convertValue(itemMirror, item, "@LIST_ITEM"));
+  });
+  
+  _log("Created generic list: ${resultList.reflectee}");
+  return resultList.reflectee;
+}
+
+Map _convertGenericMap(mirrors.ClassMirror mapMirror, Map fillerMap) {
+ mirrors.ClassMirror itemMirror = mapMirror.typeArguments[1];
+ mirrors.ClassMirror keyMirror = mapMirror.typeArguments[0];
+ mirrors.InstanceMirror resultMap = _initiateClass(mapMirror);
+ 
+ fillerMap.forEach((key, value) {
+  var keyItem = _convertValue(keyMirror, key, "@MAP_KEY");
+  var valueItem = _convertValue(itemMirror, value, "@MAP_VALUE");
+  (resultMap.reflectee as Map)[keyItem] = valueItem;
+ });
+ 
+ return resultMap.reflectee;
+}
+
 /**
  * Transforms the value of a field [key] to the correct value.
  *  returns Deserialized value
@@ -101,7 +178,21 @@ mirrors.TypeMirror _getTypeByEntityMap(mirrors.ClassMirror classMirror, String v
 Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
   _log("Convert \"${key}\": $value to ${_getName(valueType.qualifiedName)}");
   
-  if (valueType.qualifiedName == _QN_STRING) {
+  if (valueType is mirrors.ClassMirror &&
+      !(valueType as mirrors.ClassMirror).isOriginalDeclaration &&
+      (valueType as mirrors.ClassMirror).hasReflectedType &&
+      !_hasOnlySimpleTypeArguments(valueType)) {
+    
+    mirrors.ClassMirror varMirror = valueType as mirrors.ClassMirror;
+    
+    // handle generic lists
+    if (varMirror.originalDeclaration.qualifiedName == _QN_LIST) {
+      return _convertGenericList(varMirror, value); 
+    } else if (varMirror.originalDeclaration.qualifiedName == _QN_MAP) {
+    // handle generic maps
+      return _convertGenericMap(varMirror, value);      
+    }
+  } else if (valueType.qualifiedName == _QN_STRING) {
     if (value is String) {
       return value;
     } else {

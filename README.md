@@ -59,6 +59,8 @@ class EntityClass {
   @DartsonProperty(ignore:true)
   String notVisible;
   
+  List<EntityClass> children;
+  
   set setted(String s) => _setted = s;
   String get setted => _setted;
 }
@@ -70,10 +72,16 @@ void main() {
   print(object.otherName); // > blub
   print(object.notVisible); // > it is
   print(object.setted); // > awesome
+  
+  // to parse a list of items use [parseList]
+  List<EntityClass> list = parseList('[{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}]', EntityClass);
+  print(list.length); // > 2
+  print(list[0].name); // > test
+  print(list[0].children[0].name); // > child1
 }
 ```
 
 ## TODO
 
-- Support List and Map generics (initiate objects)
 - Better dart2js solution
+- Handle recrusive errors
