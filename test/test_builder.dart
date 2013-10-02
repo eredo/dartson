@@ -2,10 +2,6 @@ library test_builder;
 
 import '../lib/dartson.dart';
 import '../lib/builder.dart';
-import 'dart:mirrors';
-import 'package:unittest/unittest.dart';
-
-part '_test_builded.dart';
 
 @DartsonEntity()
 class TestClass {
@@ -17,6 +13,8 @@ class TestClass {
 
 void main() {
   DARTSON_BUILDER_DEBUG = true;
+  
+  // TODO: Add a test case for the builder
   
   BuilderOptions options = new BuilderOptions();
   options.isTest = true;
