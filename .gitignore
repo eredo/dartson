@@ -1,5 +1,6 @@
 .settings
-*packages/
+packages/
+test/packages/
 .project
 pubspec.lock
 *.DS_Store
