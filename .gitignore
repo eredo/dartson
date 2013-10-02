@@ -1,3 +1,4 @@
+.settings
 *packages/
 .project
 pubspec.lock
