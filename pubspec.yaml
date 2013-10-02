@@ -1,0 +1,6 @@
+name: dartson
+version: 0.1.0
+author: Eric Schneller
+description: JSON stringifier of any objects by reflection.
+dev_dependencies:
+  unittest: any
