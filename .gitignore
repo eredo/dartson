@@ -1,3 +1,5 @@
+*.js
+*.js.*
 .settings
 packages/
 test/packages/
