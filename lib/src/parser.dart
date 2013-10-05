@@ -4,9 +4,11 @@ const _getName = mirrors.MirrorSystem.getName;
 
 final Symbol _QN_STRING = mirrors.reflectClass(String).qualifiedName;
 final Symbol _QN_NUM = mirrors.reflectClass(num).qualifiedName;
+final Symbol _QN_INT = mirrors.reflectClass(int).qualifiedName;
 final Symbol _QN_BOOL = mirrors.reflectClass(bool).qualifiedName;
 final Symbol _QN_LIST = mirrors.reflectClass(List).qualifiedName;
 final Symbol _QN_MAP = mirrors.reflectClass(Map).qualifiedName;
+final Symbol _QN_OBJECT = mirrors.reflectClass(Object).qualifiedName;
 
 /**
  * Creates a new instance of [clazz], parses the json in [jsonStr] and puts
@@ -73,13 +75,7 @@ void _fillObject(mirrors.InstanceMirror objMirror, Map filler) {
           objMirror.setField(sym, _convertValue(_getTypeByEntityMap(classMirror, varName),
             filler[fieldName], varName));
         } else {
-//          if (DARTSON_DEBUG) {
-//            _log("${_getName(sym)}: original: ${variable.type.isOriginalDeclaration} " + 
-//                "reflected: ${variable.type.hasReflectedType} symbol: ${_getName(variable.type.qualifiedName)} " +
-//                "original: ${variable.type.reflectedType} is simple ${_isSimpleType(variable.type.reflectedType)}");
-//          }
-//          
-          _log("Set default field: ${_getName(sym)}");
+          _log("Set field: ${_getName(sym)}");
           objMirror.setField(sym, _convertValue(variable.type, filler[fieldName], varName)); 
         }
       }
@@ -107,6 +103,8 @@ void _fillObject(mirrors.InstanceMirror objMirror, Map filler) {
       }
     }
   });
+  
+  _log("Filled object completly: ${filler}");
 }
 
 /**
@@ -159,14 +157,17 @@ Map _convertGenericMap(mirrors.ClassMirror mapMirror, Map fillerMap) {
  mirrors.ClassMirror itemMirror = mapMirror.typeArguments[1];
  mirrors.ClassMirror keyMirror = mapMirror.typeArguments[0];
  mirrors.InstanceMirror resultMap = _initiateClass(mapMirror);
+ Map reflectee = {};
  
  fillerMap.forEach((key, value) {
   var keyItem = _convertValue(keyMirror, key, "@MAP_KEY");
   var valueItem = _convertValue(itemMirror, value, "@MAP_VALUE");
-  (resultMap.reflectee as Map)[keyItem] = valueItem;
+  reflectee[keyItem] = valueItem;
+  _log("Added item ${valueItem} to map key: ${keyItem}");
  });
  
- return resultMap.reflectee;
+ _log("Map converted completly");
+ return reflectee;
 }
 
 /**
@@ -177,6 +178,14 @@ Map _convertGenericMap(mirrors.ClassMirror mapMirror, Map fillerMap) {
  */
 Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
   _log("Convert \"${key}\": $value to ${_getName(valueType.qualifiedName)}");
+  if (DARTSON_DEBUG) {
+    if (valueType is mirrors.ClassMirror) {
+      _log("$key: original: ${(valueType as mirrors.ClassMirror).isOriginalDeclaration} " + 
+          "reflected: ${(valueType as mirrors.ClassMirror).hasReflectedType} symbol: ${_getName(valueType.qualifiedName)} " +
+          "original: ${(valueType as mirrors.ClassMirror).reflectedType} is " + 
+          "simple ${_isSimpleType((valueType as mirrors.ClassMirror).reflectedType)}");
+    }
+  }
   
   if (valueType is mirrors.ClassMirror &&
       !(valueType as mirrors.ClassMirror).isOriginalDeclaration &&
@@ -199,10 +208,16 @@ Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
       throw new IncorrectTypeTransform(value, "String", key);
     }
   } else if (valueType.qualifiedName == _QN_NUM) {
-    if (value is num) {
+    if (value is num || value is int) {
       return value;
     } else {
       throw new IncorrectTypeTransform(value, "num", key);
+    }
+  } else if (valueType.qualifiedName == _QN_INT) {
+    if (value is int || value is num) {
+      return value;
+    } else {
+      throw new IncorrectTypeTransform(value, "int", key);
     }
   } else if (valueType.qualifiedName == _QN_BOOL) {
     if (value is bool) {
@@ -222,15 +237,16 @@ Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
     } else {
       throw new IncorrectTypeTransform(value, "Map", key);
     }
+  } else if (valueType.qualifiedName == _QN_OBJECT) {
+    return value;
   } else if (_getName(valueType.qualifiedName) == "dynamic") {
     // dynamic is used in JavaScript runtime
     // if this appears something went wrong
     // TODO: Think of a correct way to handle this problem / exception?!
   } else {
-    _log("Found individuell type is classmirror: ${valueType is mirrors.ClassMirror} ");
     var obj = _initiateClass(valueType);
     
-    if (value is Object && !(value is String) && !(value is num)  && !(value is bool)) {
+    if (!(value is String) && !(value is num)  && !(value is bool)) {
       _fillObject(obj, value);
     } else {
       throw new IncorrectTypeTransform(value, _getName(valueType.qualifiedName), key);

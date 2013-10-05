@@ -4,7 +4,7 @@ import '../lib/dartson.dart';
 import 'package:unittest/unittest.dart';
 
 void main() {
-//  DARTSON_DEBUG = true;
+  DARTSON_DEBUG = true;
 
   test('serialize: simple array test', () {
     String str = serialize(['test1', 'test2']);
@@ -39,6 +39,16 @@ void main() {
     String str = serialize(map);
     expect(str, '{"itsAmap":{"key1":1,"key2":"val"},"itsAarray":[1,2,3],"keyk":"valo"}');
   });
+  
+  test('serialize: simple object', () {
+    var obj = {
+      "test": "test"
+    };
+    JustObject test = new JustObject();
+    test.object = obj;
+    
+    expect(serialize(test), '{"object":{"test":"test"}}');
+  });
 
   test('serialize: simple class', () {
     var test = new TestClass1();
@@ -70,9 +80,10 @@ void main() {
   });
 
   test('parse: parser simple', () {
-    TestClass1 test = parse('{"name":"test","matter":true,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}', TestClass1);
+    TestClass1 test = parse('{"name":"test","matter":true,"intNumber":2,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}', TestClass1);
     expect(test.name, 'test');
     expect(test.matter, true);
+    expect(test.intNumber, 2);
     expect(test.number, 5);
     expect(test.list.length, 3);
     expect(test.list[1], 2);
@@ -140,6 +151,11 @@ void main() {
     expect(test[0].name, "test");
     expect(test[1].name, "test2");
   });
+  
+  test('parse: just object', () {
+    JustObject obj = parse('{"object":"test"}', JustObject);
+    expect(obj.object, 'test');
+  });
 }
 
 @DartsonEntity()
@@ -150,6 +166,7 @@ class TestClass1 {
   List list;
   Map map;
   TestClass1 child;
+  int intNumber;
   
   @DartsonProperty(ignore:true)
   bool ignored;
@@ -158,6 +175,10 @@ class TestClass1 {
   String renamed;
 
   TestClass1();
+}
+
+class JustObject {
+  Object object;
 }
 
 class TestGetter {
