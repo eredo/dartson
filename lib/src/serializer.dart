@@ -5,7 +5,7 @@ part of dartson;
  */
 String serialize(Object object) {
   _log("Start serializing");
-  return JSON.stringify(objectToSerializable(object));
+  return JSON.encode(objectToSerializable(object));
 }
 
 Object objectToSerializable(Object obj) {

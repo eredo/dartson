@@ -1,7 +1,7 @@
 library dartson;
 
 import 'dart:mirrors' as mirrors;
-import 'dart:json' as JSON;
+import 'dart:convert';
 
 part 'src/exceptions.dart';
 part 'src/serializer.dart';

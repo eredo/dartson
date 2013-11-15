@@ -23,7 +23,7 @@ final Symbol _QN_OBJECT = mirrors.reflectClass(Object).qualifiedName;
  */
 dynamic parse(String jsonStr, Type clazz) {
   mirrors.InstanceMirror obj = _initiateClass(mirrors.reflectClass(clazz));
-  Map filler = JSON.parse(jsonStr);
+  Map filler = JSON.decode(jsonStr);
 
   _fillObject(obj, filler);
 
@@ -43,7 +43,7 @@ dynamic parse(String jsonStr, Type clazz) {
  */
 List parseList(String jsonStr, Type clazz) {
   List returnList = [];
-  List filler = JSON.parse(jsonStr);
+  List filler = JSON.decode(jsonStr);
   filler.forEach((item) {
     mirrors.InstanceMirror obj = _initiateClass(mirrors.reflectClass(clazz));
     _fillObject(obj, item);

@@ -4,7 +4,7 @@ import '../lib/dartson.dart';
 import 'package:unittest/unittest.dart';
 
 void main() {
-  DARTSON_DEBUG = true;
+  DARTSON_DEBUG = false;
 
   test('serialize: simple array test', () {
     String str = serialize(['test1', 'test2']);

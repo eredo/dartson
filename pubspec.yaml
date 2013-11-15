@@ -4,6 +4,6 @@ author: Eric Schneller <eric@schnellers.name>
 description: Dartson is a Dart library that can be used to convert Dart objects into a JSON string. It uses dart:mirrors reflection to rebuild the schema. It also works in dart2js when using the dartson builder.
 homepage: https://github.com/eredo/dartson
 environment:
-  sdk: '>=0.7.5'
+  sdk: '>=1.0.0'
 dev_dependencies:
   unittest: any
