@@ -53,13 +53,12 @@ Object _serializeObject(Object obj) {
   mirrors.ClassMirror classMirror = instMirror.type;
   _log("Serializing class: ${mirrors.MirrorSystem.getName(classMirror.qualifiedName)}");
   Map result = new Map<String,Object>();
-
-  classMirror.variables.forEach((sym, variable) {
-    _pushField(sym, variable, instMirror, result);
-  });
-
-  classMirror.getters.forEach((sym, getter) {
-    _pushField(sym, getter, instMirror, result);
+  
+  classMirror.declarations.forEach((sym, decl) {
+    if (!decl.isPrivate && 
+        (decl is mirrors.VariableMirror || (decl is mirrors.MethodMirror && decl.isGetter))) {
+      _pushField(sym, decl, instMirror, result);
+    }
   });
   
   _log("Serialization completed.");
@@ -74,27 +73,22 @@ Object _serializeObject(Object obj) {
  */
 void _pushField(Symbol symbol, mirrors.DeclarationMirror variable,
                 mirrors.InstanceMirror instMirror, Map<String,Object> result) {
+  mirrors.InstanceMirror field = instMirror.getField(symbol);
+  Object value = field.reflectee;
+  String fieldName = mirrors.MirrorSystem.getName(symbol);
+  _log("Start serializing field: ${fieldName}");
   
-  if (!variable.isPrivate &&
-    (variable is mirrors.VariableMirror ? !(variable as mirrors.VariableMirror).isStatic : true)) {
-    
-    mirrors.InstanceMirror field = instMirror.getField(symbol);
-    Object value = field.reflectee;
-    String fieldName = mirrors.MirrorSystem.getName(symbol);
-    _log("Start serializing field: ${fieldName}");
-    
-    // check if there is a DartsonProperty annotation
-    DartsonProperty prop = _getProperty(variable);
-    _log("Property: ${prop}");
-    
-    if (prop != null && prop.name != null) {  
-      _log("Field renamed to: ${prop.name}");
-      fieldName = prop.name;
-    }
-    
-    if (value != null && (prop != null ? !prop.ignore : true)) {
-      _log("Serializing field: ${fieldName}");
+  // check if there is a DartsonProperty annotation
+  DartsonProperty prop = _getProperty(variable);
+  _log("Property: ${prop}");
+  
+  if (prop != null && prop.name != null) {  
+    _log("Field renamed to: ${prop.name}");
+    fieldName = prop.name;
+  }
+  
+  if (value != null && (prop != null ? !prop.ignore : true)) {
+    _log("Serializing field: ${fieldName}");
       result[fieldName] = objectToSerializable(value);
     }
-  }
 }

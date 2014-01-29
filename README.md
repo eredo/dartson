@@ -2,9 +2,9 @@
 
 [![Build Status](https://drone.io/github.com/eredo/dartson/status.png)](https://drone.io/github.com/eredo/dartson/latest)
 
-Dartson is a Dart library that can be used to convert Dart objects into a JSON string. It uses dart:mirrors reflection to rebuild the schema. It also works in dart2js when using the dartson builder.
+Dartson is a Dart library that can be used to convert Dart objects into a JSON string. It uses dart:mirrors reflection to rebuild the schema.
 
- > NOTICE: dart2js support is currently in development. It will be done soon.
+> #### NOTICE: Latest tests using dart dev channel 1.2.0-dev.1.0 (31918) passed successful using dart2js without any further adjustments. Feedback is welcomed!
 
 ## Serializing objects in dart
 
@@ -82,6 +82,9 @@ void main() {
   print(list[0].children[0].name); // > child1
 }
 ```
+
+## Roadmap
+I'm thinking of a transformer which saves the hole mirrors reflection and increases the performance. It also should reduce the JavaScript size.
 
 ## TODO
 

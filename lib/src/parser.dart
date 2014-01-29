@@ -60,48 +60,35 @@ List parseList(String jsonStr, Type clazz) {
 void _fillObject(mirrors.InstanceMirror objMirror, Map filler) {
   mirrors.ClassMirror classMirror = objMirror.type;
 
-  classMirror.variables.forEach((sym, variable) {
-    if (!variable.isPrivate && !variable.isStatic) {
+  classMirror.declarations.forEach((sym, decl) {
+    if (!decl.isPrivate && (decl is mirrors.VariableMirror || decl is mirrors.MethodMirror)) {
       String varName = _getName(sym);
       String fieldName = varName;
-      DartsonProperty prop = _getProperty(variable);
+      mirrors.TypeMirror valueType;
       
+      // if it's a setter function we need to change the name
+      if (decl is mirrors.MethodMirror && decl.isSetter) {
+        fieldName = varName = varName.substring(0, varName.length - 1);
+        _log('Found setter function varName: ' + varName);
+        valueType = decl.parameters[0].type;
+      } else if (decl is mirrors.VariableMirror) {
+        valueType = decl.type;
+      } else {
+        return;
+      }
+      
+      // check if the property is renamed by DartsonProperty
+      DartsonProperty prop = _getProperty(decl);
       if (prop != null && prop.name != null) {
         fieldName = prop.name;
       }
       
+      _log('Try to fill object with: ${fieldName}: ${filler[fieldName]}');
       if (filler[fieldName] != null) {
-        if (ENTITY_MAP != null) {
-          objMirror.setField(sym, _convertValue(_getTypeByEntityMap(classMirror, varName),
+        objMirror.setField(new Symbol(varName), _convertValue(valueType,
             filler[fieldName], varName));
-        } else {
-          _log("Set field: ${_getName(sym)}");
-          objMirror.setField(sym, _convertValue(variable.type, filler[fieldName], varName)); 
-        }
       }
-    }
-  });
-  
-  classMirror.setters.forEach((sym, method) {
-    if (!method.isPrivate && !method.isStatic) {
-      // however names of setter functions contain a "=" at the end of the name
-      String varName = _getName(sym).replaceFirst("=", "");
-      String fieldName = varName;
-      DartsonProperty prop = _getProperty(method);
-      
-      if (prop != null && prop.name != null) {
-        fieldName = prop.name;
-      }
-      
-      if (filler[fieldName] != null) {
-        if (ENTITY_MAP != null) {
-          objMirror.setField(new Symbol(varName), _convertValue(_getTypeByEntityMap(classMirror, varName), filler[fieldName], varName));
-        } else {
-          _log("Invoke setter: ${varName} with ${fieldName}");
-          objMirror.setField(new Symbol(varName), _convertValue(method.parameters[0].type, filler[fieldName], varName));
-        }
-      }
-    }
+    }    
   });
   
   _log("Filled object completly: ${filler}");
@@ -142,6 +129,7 @@ bool _hasOnlySimpleTypeArguments(mirrors.ClassMirror mirr) {
  * Converts a list of objects to a list with a Class.
  */
 List _convertGenericList(mirrors.ClassMirror listMirror, List fillerList) {
+  _log('Converting generic list');
   mirrors.ClassMirror itemMirror = listMirror.typeArguments[0];
   mirrors.InstanceMirror resultList = _initiateClass(listMirror);
   
@@ -154,20 +142,21 @@ List _convertGenericList(mirrors.ClassMirror listMirror, List fillerList) {
 }
 
 Map _convertGenericMap(mirrors.ClassMirror mapMirror, Map fillerMap) {
- mirrors.ClassMirror itemMirror = mapMirror.typeArguments[1];
- mirrors.ClassMirror keyMirror = mapMirror.typeArguments[0];
- mirrors.InstanceMirror resultMap = _initiateClass(mapMirror);
- Map reflectee = {};
+  _log('Converting generic map');
+  mirrors.ClassMirror itemMirror = mapMirror.typeArguments[1];
+  mirrors.ClassMirror keyMirror = mapMirror.typeArguments[0];
+  mirrors.InstanceMirror resultMap = _initiateClass(mapMirror);
+  Map reflectee = {};
  
- fillerMap.forEach((key, value) {
-  var keyItem = _convertValue(keyMirror, key, "@MAP_KEY");
-  var valueItem = _convertValue(itemMirror, value, "@MAP_VALUE");
-  reflectee[keyItem] = valueItem;
-  _log("Added item ${valueItem} to map key: ${keyItem}");
- });
+  fillerMap.forEach((key, value) {
+    var keyItem = _convertValue(keyMirror, key, "@MAP_KEY");
+    var valueItem = _convertValue(itemMirror, value, "@MAP_VALUE");
+    reflectee[keyItem] = valueItem;
+    _log("Added item ${valueItem} to map key: ${keyItem}");
+  });
  
- _log("Map converted completly");
- return reflectee;
+  _log("Map converted completly");
+  return reflectee;
 }
 
 /**
@@ -176,24 +165,25 @@ Map _convertGenericMap(mirrors.ClassMirror mapMirror, Map fillerMap) {
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [NoConstructorError] 
  */
-Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {
+Object _convertValue(mirrors.TypeMirror valueType, Object value, String key) {  
   _log("Convert \"${key}\": $value to ${_getName(valueType.qualifiedName)}");
   if (DARTSON_DEBUG) {
     if (valueType is mirrors.ClassMirror) {
-      _log("$key: original: ${(valueType as mirrors.ClassMirror).isOriginalDeclaration} " + 
-          "reflected: ${(valueType as mirrors.ClassMirror).hasReflectedType} symbol: ${_getName(valueType.qualifiedName)} " +
-          "original: ${(valueType as mirrors.ClassMirror).reflectedType} is " + 
-          "simple ${_isSimpleType((valueType as mirrors.ClassMirror).reflectedType)}");
+      _log("$key: original: ${valueType.isOriginalDeclaration} " + 
+          "reflected: ${valueType.hasReflectedType} symbol: ${_getName(valueType.qualifiedName)} " +
+          "original: ${valueType.reflectedType} is " + 
+          "simple ${_isSimpleType(valueType.reflectedType)}");
     }
   }
   
   if (valueType is mirrors.ClassMirror &&
-      !(valueType as mirrors.ClassMirror).isOriginalDeclaration &&
-      (valueType as mirrors.ClassMirror).hasReflectedType &&
+      !valueType.isOriginalDeclaration &&
+      valueType.hasReflectedType &&
       !_hasOnlySimpleTypeArguments(valueType)) {
     
-    mirrors.ClassMirror varMirror = valueType as mirrors.ClassMirror;
+    mirrors.ClassMirror varMirror = valueType;
     
+    _log('Handle generic');
     // handle generic lists
     if (varMirror.originalDeclaration.qualifiedName == _QN_LIST) {
       return _convertGenericList(varMirror, value); 
@@ -275,26 +265,22 @@ mirrors.InstanceMirror _initiateClass(mirrors.ClassMirror classMirror) {
   _log("Parsing to class: ${_getName(classMirror.qualifiedName)}");
   Symbol constrMethod = null;
   
-  if (classMirror.constructors != null) {
-  classMirror.constructors.forEach((sym, method) {
-    _log("Checking constructor: \"${_getName(method.constructorName)}\"");
-    if (method.parameters.length == 0) {
-      constrMethod = method.constructorName;
-    } else {
-      bool onlyOptional = true;
+  classMirror.declarations.forEach((sym, decl) {
+    if (decl is mirrors.MethodMirror && decl.isConstructor) {
+      _log('Found constructor function: ${_getName(decl.qualifiedName)}');
       
-      method.parameters.forEach((param) {
-        if (!param.isOptional) {
-          onlyOptional = false;
+      if (decl.parameters.length == 0) {
+        constrMethod = decl.constructorName;
+      } else {
+        bool onlyOptional = true;
+        decl.parameters.forEach((p) => !p.isOptional && (onlyOptional = false));
+                
+        if (onlyOptional) {
+          constrMethod = decl.constructorName;
         }
-      });
-      
-      if (onlyOptional) {
-        constrMethod = method.constructorName;
       }
     }
   });
-  }
   
   mirrors.InstanceMirror obj;
   if (constrMethod != null) {
@@ -302,6 +288,12 @@ mirrors.InstanceMirror _initiateClass(mirrors.ClassMirror classMirror) {
     obj = classMirror.newInstance(constrMethod, []);
     
     _log("Created instance of type: ${_getName(obj.type.qualifiedName)}");
+  } else if (classMirror.qualifiedName == _QN_LIST) {
+    _log('No constructor for list found, try to run empty one');
+    obj = mirrors.reflect([]);
+  } else if (classMirror.qualifiedName == _QN_MAP) {
+    _log('No constructor for map found');
+    obj = mirrors.reflect({});
   } else {
     _log("No constructor found.");
     throw new NoConstructorError(classMirror);     

@@ -3,8 +3,16 @@ library test_dartson;
 import '../lib/dartson.dart';
 import 'package:unittest/unittest.dart';
 
+
+@MirrorsUsed(targets: const[
+  'dartson',
+  'test_dartson'
+  ],
+  override: '*')
+import 'dart:mirrors';
+
 void main() {
-  DARTSON_DEBUG = false;
+  DARTSON_DEBUG = true;
 
   test('serialize: simple array test', () {
     String str = serialize(['test1', 'test2']);
@@ -152,10 +160,10 @@ void main() {
     expect(test[1].name, "test2");
   });
   
-  test('parse: just object', () {
-    JustObject obj = parse('{"object":"test"}', JustObject);
-    expect(obj.object, 'test');
-  });
+//  test('parse: just object', () {
+//    JustObject obj = parse('{"object":"test"}', JustObject);
+//    expect(obj.object, 'test');
+//  });
 }
 
 @DartsonEntity()
