@@ -49,14 +49,14 @@ Map _serializeMap(Map map) {
  * Runs through the Object keys by using a ClassMirror.
  */
 Object _serializeObject(Object obj) {
-  mirrors.InstanceMirror instMirror = mirrors.reflect(obj);
-  mirrors.ClassMirror classMirror = instMirror.type;
-  _log("Serializing class: ${mirrors.MirrorSystem.getName(classMirror.qualifiedName)}");
+  InstanceMirror instMirror = reflect(obj);
+  ClassMirror classMirror = instMirror.type;
+  _log("Serializing class: ${MirrorSystem.getName(classMirror.qualifiedName)}");
   Map result = new Map<String,Object>();
   
   classMirror.declarations.forEach((sym, decl) {
     if (!decl.isPrivate && 
-        (decl is mirrors.VariableMirror || (decl is mirrors.MethodMirror && decl.isGetter))) {
+        (decl is VariableMirror || (decl is MethodMirror && decl.isGetter))) {
       _pushField(sym, decl, instMirror, result);
     }
   });
@@ -71,11 +71,11 @@ Object _serializeObject(Object obj) {
  * the value to the [result] map. If there's no [DartsonProperty] annotation 
  * with a different name set it will use the name of [symbol].
  */
-void _pushField(Symbol symbol, mirrors.DeclarationMirror variable,
-                mirrors.InstanceMirror instMirror, Map<String,Object> result) {
-  mirrors.InstanceMirror field = instMirror.getField(symbol);
+void _pushField(Symbol symbol, DeclarationMirror variable,
+                InstanceMirror instMirror, Map<String,Object> result) {
+  InstanceMirror field = instMirror.getField(symbol);
   Object value = field.reflectee;
-  String fieldName = mirrors.MirrorSystem.getName(symbol);
+  String fieldName = MirrorSystem.getName(symbol);
   _log("Start serializing field: ${fieldName}");
   
   // check if there is a DartsonProperty annotation

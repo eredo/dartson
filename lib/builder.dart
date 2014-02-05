@@ -1,3 +1,7 @@
+/**
+ * NOTICE: The builder is currenlty not used and just a first prototype.
+ */
+
 library dartson.builder;
 
 import 'dart:mirrors';

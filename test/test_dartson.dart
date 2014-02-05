@@ -8,7 +8,8 @@ import 'package:unittest/unittest.dart';
   'dartson',
   'test_dartson'
   ],
-  override: '*')
+  override: '*',
+  metaTargets: const [DartsonEntity,DartsonProperty])
 import 'dart:mirrors';
 
 void main() {

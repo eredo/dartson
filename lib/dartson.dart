@@ -1,6 +1,10 @@
 library dartson;
 
-import 'dart:mirrors' as mirrors;
+@MirrorsUsed(
+    targets: const['dartson'],
+    metaTargets: const [DartsonEntity,DartsonProperty],
+    override: '*')
+import 'dart:mirrors';
 import 'dart:convert';
 
 part 'src/exceptions.dart';
@@ -16,7 +20,7 @@ bool DARTSON_DEBUG = false;
  * Contains the description of each class which is has the annotation
  * [DartsonEntity]. This map should be used in dart2js.
  */
-Map<mirrors.ClassMirror,EntityDescription> ENTITY_MAP = null;
+Map<ClassMirror,EntityDescription> ENTITY_MAP = null;
 
 /**
  * Annotation class to mark a class as serializable. This is required
@@ -71,7 +75,7 @@ void _log(Object msg) {
 /**
  * Looks for a [DartsonProperty] annotation in the metadata of [variable]. 
  */
-DartsonProperty _getProperty(mirrors.DeclarationMirror variable) {
+DartsonProperty _getProperty(DeclarationMirror variable) {
   DartsonProperty prop;
   
   variable.metadata.forEach((meta) {
