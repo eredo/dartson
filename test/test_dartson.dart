@@ -5,11 +5,9 @@ import 'package:unittest/unittest.dart';
 
 
 @MirrorsUsed(targets: const[
-  'dartson',
   'test_dartson'
   ],
-  override: '*',
-  metaTargets: const [DartsonEntity,DartsonProperty])
+  override: '*')
 import 'dart:mirrors';
 
 void main() {
@@ -167,7 +165,6 @@ void main() {
 //  });
 }
 
-@DartsonEntity()
 class TestClass1 {
   String name;
   bool matter;

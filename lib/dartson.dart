@@ -1,8 +1,7 @@
 library dartson;
 
 @MirrorsUsed(
-    targets: const['dartson'],
-    metaTargets: const [DartsonEntity,DartsonProperty],
+    metaTargets: const [DartsonProperty],
     override: '*')
 import 'dart:mirrors';
 import 'dart:convert';
@@ -25,6 +24,7 @@ Map<ClassMirror,EntityDescription> ENTITY_MAP = null;
 /**
  * Annotation class to mark a class as serializable. This is required
  * if the dartson builder has to build an entity map for dart2js. 
+ * @deprecated Currently not required.
  */
 class DartsonEntity {
   const DartsonEntity();
