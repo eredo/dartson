@@ -180,6 +180,36 @@ void main() {
     expect(test[1].map["test"], 3);
     expect(test[1].map["test2"], 4);
   });
+
+  group('registerTransformer', () {
+    test('register simple', () {
+      registerTransformer(new SimpleTransformer<DateTime>());
+      expect(hasTransformer(DateTime), true);
+    });
+
+    test('parse date time', () {
+      var date = new DateTime.now();
+      var ctg = parse('{"test": "${date.toString()}"}', SimpleDateContainer);
+      expect(ctg.test is DateTime, true);
+      expect(ctg.test == date, true);
+    });
+  });
+
+
+}
+
+class SimpleTransformer<T> extends TypeTransformer {
+  T decode(dynamic value) {
+    return DateTime.parse(value);
+  }
+
+  dynamic encode(T value) {
+    return value.toString();
+  }
+}
+
+class SimpleDateContainer {
+  DateTime test;
 }
 
 class TestClass1 {
