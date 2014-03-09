@@ -54,6 +54,45 @@ List parseList(String jsonStr, Type clazz) {
 }
 
 /**
+ * Creates a new instance of [clazz] and maps the data of [dataObject] into it.
+ *  Returns new instance of [clazz]
+ *  Throws [NoConstructorError] if [clazz] or Classes used inside [clazz] do not
+ *    have a constructor without or only optional arguments.
+ *  Throws [IncorrectTypeTransform] if json data types doesn't match.
+ *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
+ *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
+ *    the class.
+ */
+dynamic map(Map dataObject, Type clazz) {
+  InstanceMirror obj = _initiateClass(reflectClass(clazz));
+  _fillObject(obj, dataObject);
+
+  return obj.reflectee;
+}
+
+/**
+ * Creates a list with instances of [clazz] and maps the data of [dataMap] into
+ * each instance.
+ *   Returns A list of objects of [clazz].
+ *  Throws [NoConstructorError] if [clazz] or Classes used inside [clazz] do not
+ *    have a constructor without or only optional arguments.
+ *  Throws [IncorrectTypeTransform] if json data types doesn't match.
+ *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
+ *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
+ *    the class.
+ */
+List mapList(List<Map> dataMap, Type clazz) {
+  List returnList = [];
+  dataMap.forEach((item) {
+    InstanceMirror obj = _initiateClass(reflectClass(clazz));
+    _fillObject(obj, item);
+    returnList.add(obj.reflectee);
+  });
+
+  return returnList;
+}
+
+/**
  * Puts the data of the [filler] into the object in [objMirror]
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  */

@@ -11,7 +11,7 @@ import 'package:unittest/unittest.dart';
 import 'dart:mirrors';
 
 void main() {
-  DARTSON_DEBUG = true;
+  DARTSON_DEBUG = false;
 
   test('serialize: simple array test', () {
     String str = serialize(['test1', 'test2']);
@@ -163,6 +163,23 @@ void main() {
 //    JustObject obj = parse('{"object":"test"}', JustObject);
 //    expect(obj.object, 'test');
 //  });
+
+  test('map: parse object', () {
+    SimpleMapString test = map({
+      "map": {"test": 1, "test2": 2}
+    }, SimpleMapString);
+
+    expect(test.map["test"], 1);
+    expect(test.map["test2"], 2);
+  });
+
+  test('mapList: parse list', () {
+    List<SimpleMapString> test = mapList([{"map": {"test": 1, "test2": 2}}, {"map": {"test": 3, "test2": 4}}], SimpleMapString);
+    expect(test[0].map["test"], 1);
+    expect(test[0].map["test2"], 2);
+    expect(test[1].map["test"], 3);
+    expect(test[1].map["test2"], 4);
+  });
 }
 
 class TestClass1 {
