@@ -181,19 +181,24 @@ void main() {
     expect(test[1].map["test2"], 4);
   });
 
-  group('registerTransformer', () {
     test('register simple', () {
       registerTransformer(new SimpleTransformer<DateTime>());
       expect(hasTransformer(DateTime), true);
     });
 
-    test('parse date time', () {
+    test('parse: DateTime', () {
       var date = new DateTime.now();
-      var ctg = parse('{"test": "${date.toString()}"}', SimpleDateContainer);
-      expect(ctg.test is DateTime, true);
-      expect(ctg.test == date, true);
+      var ctg = parse('{"testDate":"${date.toString()}"}', SimpleDateContainer);
+      expect(ctg.testDate is DateTime, true);
+      expect(ctg.testDate == date, true);
     });
-  });
+
+    test('serialize: DateTime', () {
+      var obj = new SimpleDateContainer();
+      obj.testDate = new DateTime.now();
+      var str = serialize(obj);
+      expect(str, '{"testDate":"${obj.testDate.toString()}"}');
+    });
 
 
 }
@@ -209,7 +214,7 @@ class SimpleTransformer<T> extends TypeTransformer {
 }
 
 class SimpleDateContainer {
-  DateTime test;
+  DateTime testDate;
 }
 
 class TestClass1 {

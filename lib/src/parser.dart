@@ -21,8 +21,6 @@ Map<String,TypeTransformer> _transformers = {};
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class. 
  */
 dynamic parse(String jsonStr, Type clazz) {
   InstanceMirror obj = _initiateClass(reflectClass(clazz));
@@ -41,8 +39,6 @@ dynamic parse(String jsonStr, Type clazz) {
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class. 
  */
 List parseList(String jsonStr, Type clazz) {
   List returnList = [];
@@ -63,8 +59,6 @@ List parseList(String jsonStr, Type clazz) {
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class.
  */
 dynamic map(Map dataObject, Type clazz) {
   InstanceMirror obj = _initiateClass(reflectClass(clazz));
@@ -81,8 +75,6 @@ dynamic map(Map dataObject, Type clazz) {
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class.
  */
 List mapList(List<Map> dataMap, Type clazz) {
   List returnList = [];
