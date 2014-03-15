@@ -180,6 +180,41 @@ void main() {
     expect(test[1].map["test"], 3);
     expect(test[1].map["test2"], 4);
   });
+
+    test('register simple', () {
+      registerTransformer(new SimpleTransformer<DateTime>());
+      expect(hasTransformer(DateTime), true);
+    });
+
+    test('parse: DateTime', () {
+      var date = new DateTime.now();
+      var ctg = parse('{"testDate":"${date.toString()}"}', SimpleDateContainer);
+      expect(ctg.testDate is DateTime, true);
+      expect(ctg.testDate == date, true);
+    });
+
+    test('serialize: DateTime', () {
+      var obj = new SimpleDateContainer();
+      obj.testDate = new DateTime.now();
+      var str = serialize(obj);
+      expect(str, '{"testDate":"${obj.testDate.toString()}"}');
+    });
+
+
+}
+
+class SimpleTransformer<T> extends TypeTransformer {
+  T decode(dynamic value) {
+    return DateTime.parse(value);
+  }
+
+  dynamic encode(T value) {
+    return value.toString();
+  }
+}
+
+class SimpleDateContainer {
+  DateTime testDate;
 }
 
 class TestClass1 {

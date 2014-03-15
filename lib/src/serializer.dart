@@ -51,19 +51,24 @@ Map _serializeMap(Map map) {
 Object _serializeObject(Object obj) {
   InstanceMirror instMirror = reflect(obj);
   ClassMirror classMirror = instMirror.type;
-  _log("Serializing class: ${MirrorSystem.getName(classMirror.qualifiedName)}");
-  Map result = new Map<String,Object>();
-  
-  classMirror.declarations.forEach((sym, decl) {
-    if (!decl.isPrivate && 
-        (decl is VariableMirror || (decl is MethodMirror && decl.isGetter))) {
-      _pushField(sym, decl, instMirror, result);
-    }
-  });
-  
-  _log("Serialization completed.");
+  _log("Serializing class: ${_getName(classMirror.qualifiedName)}");
 
-  return result;
+  var transformer = _transformers[_getName(classMirror.qualifiedName)];
+  if (transformer != null) {
+    _log("Found transformer for type: ${_getName(classMirror.qualifiedName)}");
+    return transformer.encode(obj);
+  } else {
+    Map result = new Map<String,Object>();
+    classMirror.declarations.forEach((sym, decl) {
+      if (!decl.isPrivate &&
+      (decl is VariableMirror || (decl is MethodMirror && decl.isGetter))) {
+        _pushField(sym, decl, instMirror, result);
+      }
+    });
+
+    _log("Serialization completed.");
+    return result;
+  }
 }
 
 /**

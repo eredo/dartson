@@ -9,6 +9,7 @@ import 'dart:convert';
 part 'src/exceptions.dart';
 part 'src/serializer.dart';
 part 'src/parser.dart';
+part 'src/type_transformer.dart';
 
 /**
  * Set this to true to receive log output of dartson.

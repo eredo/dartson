@@ -10,6 +10,9 @@ final Symbol _QN_LIST = reflectClass(List).qualifiedName;
 final Symbol _QN_MAP = reflectClass(Map).qualifiedName;
 final Symbol _QN_OBJECT = reflectClass(Object).qualifiedName;
 
+// map that contains all type transformer
+Map<String,TypeTransformer> _transformers = {};
+
 /**
  * Creates a new instance of [clazz], parses the json in [jsonStr] and puts
  * the data into the new instance.
@@ -18,8 +21,6 @@ final Symbol _QN_OBJECT = reflectClass(Object).qualifiedName;
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class. 
  */
 dynamic parse(String jsonStr, Type clazz) {
   InstanceMirror obj = _initiateClass(reflectClass(clazz));
@@ -38,8 +39,6 @@ dynamic parse(String jsonStr, Type clazz) {
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class. 
  */
 List parseList(String jsonStr, Type clazz) {
   List returnList = [];
@@ -60,8 +59,6 @@ List parseList(String jsonStr, Type clazz) {
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class.
  */
 dynamic map(Map dataObject, Type clazz) {
   InstanceMirror obj = _initiateClass(reflectClass(clazz));
@@ -78,8 +75,6 @@ dynamic map(Map dataObject, Type clazz) {
  *    have a constructor without or only optional arguments.
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
- *  Throws [EntityDescriptionMissing] if [ENTITY_MAP] is not null and doesn't contain
- *    the class.
  */
 List mapList(List<Map> dataMap, Type clazz) {
   List returnList = [];
@@ -90,6 +85,19 @@ List mapList(List<Map> dataMap, Type clazz) {
   });
 
   return returnList;
+}
+
+/**
+ * Registers the [transformer] into the map.
+ */
+void registerTransformer(TypeTransformer transformer) {
+  InstanceMirror mirr = reflect(transformer);
+  _transformers[_getName(mirr.type.typeArguments[0].qualifiedName)] = transformer;
+}
+
+bool hasTransformer(Type type) {
+  TypeMirror mirr = reflectType(type);
+  return _transformers[_getName(mirr.qualifiedName)] != null;
 }
 
 /**
@@ -204,31 +212,25 @@ Map _convertGenericMap(ClassMirror mapMirror, Map fillerMap) {
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
  *  Throws [NoConstructorError] 
  */
-Object _convertValue(TypeMirror valueType, Object value, String key) {  
+Object _convertValue(TypeMirror valueType, Object value, String key) {
   _log("Convert \"${key}\": $value to ${_getName(valueType.qualifiedName)}");
   if (DARTSON_DEBUG) {
     if (valueType is ClassMirror) {
-      _log("$key: original: ${valueType.isOriginalDeclaration} " + 
-          "reflected: ${valueType.hasReflectedType} symbol: ${_getName(valueType.qualifiedName)} " +
-          "original: ${valueType.reflectedType} is " + 
-          "simple ${_isSimpleType(valueType.reflectedType)}");
+      _log("$key: original: ${valueType.isOriginalDeclaration} " + "reflected: ${valueType.hasReflectedType} symbol: ${_getName(valueType.qualifiedName)} " + "original: ${valueType.reflectedType} is " + "simple ${_isSimpleType(valueType.reflectedType)}");
     }
   }
-  
-  if (valueType is ClassMirror &&
-      !valueType.isOriginalDeclaration &&
-      valueType.hasReflectedType &&
-      !_hasOnlySimpleTypeArguments(valueType)) {
-    
+
+  if (valueType is ClassMirror && !valueType.isOriginalDeclaration && valueType.hasReflectedType && !_hasOnlySimpleTypeArguments(valueType)) {
+
     ClassMirror varMirror = valueType;
-    
+
     _log('Handle generic');
     // handle generic lists
     if (varMirror.originalDeclaration.qualifiedName == _QN_LIST) {
-      return _convertGenericList(varMirror, value); 
+      return _convertGenericList(varMirror, value);
     } else if (varMirror.originalDeclaration.qualifiedName == _QN_MAP) {
-    // handle generic maps
-      return _convertGenericMap(varMirror, value);      
+      // handle generic maps
+      return _convertGenericMap(varMirror, value);
     }
   } else if (valueType.qualifiedName == _QN_STRING) {
     if (value is String) {
@@ -272,6 +274,8 @@ Object _convertValue(TypeMirror valueType, Object value, String key) {
     // dynamic is used in JavaScript runtime
     // if this appears something went wrong
     // TODO: Think of a correct way to handle this problem / exception?!
+  } else if (_transformers[_getName(valueType.qualifiedName)] != null) {
+    return _transformers[_getName(valueType.qualifiedName)].decode(value);
   } else {
     var obj = _initiateClass(valueType);
     
