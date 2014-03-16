@@ -88,6 +88,18 @@ List mapList(List<Map> dataMap, Type clazz) {
 }
 
 /**
+ * Filles an [object] with the data of [dataObject] and returns the [object].
+ *  Throws [NoConstructorError] if [clazz] or Classes used inside [clazz] do not
+ *    have a constructor without or only optional arguments.
+ *  Throws [IncorrectTypeTransform] if json data types doesn't match.
+ *  Throws [FormatException] if the [jsonStr] is not valid JSON text.
+ */
+dynamic fill(Map dataObject, Object object) {
+  _fillObject(reflect(object), dataObject);
+  return object;
+}
+
+/**
  * Registers the [transformer] into the map.
  */
 void registerTransformer(TypeTransformer transformer) {
