@@ -25,7 +25,7 @@ class EntityClass {
   String name;
   
   @DartsonProperty(name:"renamed")
-  bool otherName;
+  String otherName;
   
   @DartsonProperty(ignore:true)
   String notVisible;
@@ -63,7 +63,7 @@ class EntityClass {
   String _setted;
   
   @DartsonProperty(name:"renamed")
-  bool otherName;
+  String otherName;
   
   @DartsonProperty(ignore:true)
   String notVisible;
