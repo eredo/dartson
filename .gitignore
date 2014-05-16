@@ -9,3 +9,5 @@ pubspec.lock
 *.iml
 .idea
 doc-viewer/
+node_modules/
+test_out

@@ -46,9 +46,9 @@ List parseList(String jsonStr, Type clazz) {
   filler.forEach((item) {
     InstanceMirror obj = _initiateClass(reflectClass(clazz));
     _fillObject(obj, item);
-    returnList.add(obj.reflectee);    
+    returnList.add(obj.reflectee);
   });
-  
+
   return returnList;
 }
 
@@ -124,7 +124,7 @@ void _fillObject(InstanceMirror objMirror, Map filler) {
       String varName = _getName(sym);
       String fieldName = varName;
       TypeMirror valueType;
-      
+
       // if it's a setter function we need to change the name
       if (decl is MethodMirror && decl.isSetter) {
         fieldName = varName = varName.substring(0, varName.length - 1);
@@ -135,21 +135,21 @@ void _fillObject(InstanceMirror objMirror, Map filler) {
       } else {
         return;
       }
-      
+
       // check if the property is renamed by DartsonProperty
       DartsonProperty prop = _getProperty(decl);
       if (prop != null && prop.name != null) {
         fieldName = prop.name;
       }
-      
+
       _log('Try to fill object with: ${fieldName}: ${filler[fieldName]}');
-      if (filler[fieldName] != null) {
+      if (filler[fieldName] != null && valueType != null) {
         objMirror.setField(new Symbol(varName), _convertValue(valueType,
             filler[fieldName], varName));
       }
-    }    
+    }
   });
-  
+
   _log("Filled object completly: ${filler}");
 }
 
@@ -158,7 +158,7 @@ void _fillObject(InstanceMirror objMirror, Map filler) {
  */
 TypeMirror _getTypeByEntityMap(ClassMirror classMirror, String varName) {
   EntityDescription descr = ENTITY_MAP[classMirror];
-  
+
   if (descr == null) {
     throw new EntityDescriptionMissing(classMirror);
   } else {
@@ -172,7 +172,7 @@ bool _isSimpleType(Type type) {
 
 bool _hasOnlySimpleTypeArguments(ClassMirror mirr) {
   bool hasOnly = true;
-  
+
   mirr.typeArguments.forEach((ta) {
     if (ta is ClassMirror) {
       if (!_isSimpleType(ta.reflectedType)) {
@@ -180,7 +180,7 @@ bool _hasOnlySimpleTypeArguments(ClassMirror mirr) {
       }
     }
   });
-  
+
   return hasOnly;
 }
 
@@ -191,11 +191,11 @@ List _convertGenericList(ClassMirror listMirror, List fillerList) {
   _log('Converting generic list');
   ClassMirror itemMirror = listMirror.typeArguments[0];
   InstanceMirror resultList = _initiateClass(listMirror);
-  
+
   fillerList.forEach((item) {
     (resultList.reflectee as List).add(_convertValue(itemMirror, item, "@LIST_ITEM"));
   });
-  
+
   _log("Created generic list: ${resultList.reflectee}");
   return resultList.reflectee;
 }
@@ -206,14 +206,14 @@ Map _convertGenericMap(ClassMirror mapMirror, Map fillerMap) {
   ClassMirror keyMirror = mapMirror.typeArguments[0];
   InstanceMirror resultMap = _initiateClass(mapMirror);
   Map reflectee = {};
- 
+
   fillerMap.forEach((key, value) {
     var keyItem = _convertValue(keyMirror, key, "@MAP_KEY");
     var valueItem = _convertValue(itemMirror, value, "@MAP_VALUE");
     reflectee[keyItem] = valueItem;
     _log("Added item ${valueItem} to map key: ${keyItem}");
   });
- 
+
   _log("Map converted completly");
   return reflectee;
 }
@@ -222,7 +222,7 @@ Map _convertGenericMap(ClassMirror mapMirror, Map fillerMap) {
  * Transforms the value of a field [key] to the correct value.
  *  returns Deserialized value
  *  Throws [IncorrectTypeTransform] if json data types doesn't match.
- *  Throws [NoConstructorError] 
+ *  Throws [NoConstructorError]
  */
 Object _convertValue(TypeMirror valueType, Object value, String key) {
   _log("Convert \"${key}\": $value to ${_getName(valueType.qualifiedName)}");
@@ -233,7 +233,6 @@ Object _convertValue(TypeMirror valueType, Object value, String key) {
   }
 
   if (valueType is ClassMirror && !valueType.isOriginalDeclaration && valueType.hasReflectedType && !_hasOnlySimpleTypeArguments(valueType)) {
-
     ClassMirror varMirror = valueType;
 
     _log('Handle generic');
@@ -290,13 +289,13 @@ Object _convertValue(TypeMirror valueType, Object value, String key) {
     return _transformers[_getName(valueType.qualifiedName)].decode(value);
   } else {
     var obj = _initiateClass(valueType);
-    
+
     if (!(value is String) && !(value is num)  && !(value is bool)) {
       _fillObject(obj, value);
     } else {
       throw new IncorrectTypeTransform(value, _getName(valueType.qualifiedName), key);
     }
-    
+
     return obj.reflectee;
   }
 
@@ -319,29 +318,29 @@ Object _convertValue(TypeMirror valueType, Object value, String key) {
 InstanceMirror _initiateClass(ClassMirror classMirror) {
   _log("Parsing to class: ${_getName(classMirror.qualifiedName)}");
   Symbol constrMethod = null;
-  
+
   classMirror.declarations.forEach((sym, decl) {
     if (decl is MethodMirror && decl.isConstructor) {
       _log('Found constructor function: ${_getName(decl.qualifiedName)}');
-      
+
       if (decl.parameters.length == 0) {
         constrMethod = decl.constructorName;
       } else {
         bool onlyOptional = true;
         decl.parameters.forEach((p) => !p.isOptional && (onlyOptional = false));
-                
+
         if (onlyOptional) {
           constrMethod = decl.constructorName;
         }
       }
     }
   });
-  
+
   InstanceMirror obj;
   if (constrMethod != null) {
     _log("Found constructor: \"${_getName(constrMethod)}\"");
     obj = classMirror.newInstance(constrMethod, []);
-    
+
     _log("Created instance of type: ${_getName(obj.type.qualifiedName)}");
   } else if (classMirror.qualifiedName == _QN_LIST) {
     _log('No constructor for list found, try to run empty one');
@@ -351,8 +350,8 @@ InstanceMirror _initiateClass(ClassMirror classMirror) {
     obj = reflect({});
   } else {
     _log("No constructor found.");
-    throw new NoConstructorError(classMirror);     
-  }    
+    throw new NoConstructorError(classMirror);
+  }
 
   return obj;
 }

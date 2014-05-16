@@ -1,0 +1,30 @@
+{
+  "name": "dartson",
+  "version": "0.1.5",
+  "description": "A dart json to object mapper.",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "karma": "~0.12.16",
+    "karma-chrome-launcher": "~0.1.3",
+    "karma-dart": "~0.2.7",
+    "karma-script-launcher": "^0.1.0",
+    "karma-firefox-launcher": "^0.1.3",
+    "karma-junit-reporter": "^0.2.2"
+  },
+  "scripts": {
+    "test": "node_modules/karma/bin/karma start --single-run --browsers Chrome,Firefox"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/eredo/dartson.git"
+  },
+  "author": "Eric Schneller <eric@schnellers.name>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eredo/dartson/issues"
+  },
+  "homepage": "https://github.com/eredo/dartson"
+}

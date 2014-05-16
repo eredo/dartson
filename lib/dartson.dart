@@ -1,8 +1,6 @@
 library dartson;
 
-@MirrorsUsed(
-    metaTargets: const [DartsonProperty],
-    override: '*')
+@MirrorsUsed(targets: const['dartson'],override: '*')
 import 'dart:mirrors';
 import 'dart:convert';
 
@@ -24,7 +22,7 @@ Map<ClassMirror,EntityDescription> ENTITY_MAP = null;
 
 /**
  * Annotation class to mark a class as serializable. This is required
- * if the dartson builder has to build an entity map for dart2js. 
+ * if the dartson builder has to build an entity map for dart2js.
  * @deprecated Currently not required.
  */
 class DartsonEntity {
@@ -37,11 +35,11 @@ class DartsonEntity {
 class DartsonProperty {
   final bool _ignore;
   final String name;
-  
+
   const DartsonProperty({bool ignore, String name}) :
     this._ignore = ignore,
     this.name = name;
-  
+
   bool get ignore => _ignore == null ? false : _ignore;
   String toString() => "DartsonProperty: Name: ${name} , Ignore: ${ignore}";
 }
@@ -51,7 +49,7 @@ class DartsonProperty {
  */
 class EntityDescription {
   Map<String,EntityPropertyDescription> properties = {};
-  
+
   EntityDescription();
 }
 
@@ -62,7 +60,7 @@ class EntityPropertyDescription {
   final String name;
   final bool ignore;
   final Type type;
-  
+
   EntityPropertyDescription(this.name, this.type, [this.ignore = false]);
 }
 
@@ -74,16 +72,16 @@ void _log(Object msg) {
 
 
 /**
- * Looks for a [DartsonProperty] annotation in the metadata of [variable]. 
+ * Looks for a [DartsonProperty] annotation in the metadata of [variable].
  */
 DartsonProperty _getProperty(DeclarationMirror variable) {
   DartsonProperty prop;
-  
+
   variable.metadata.forEach((meta) {
     if (meta.reflectee is DartsonProperty) {
       prop = meta.reflectee;
     }
   });
-  
+
   return prop;
 }

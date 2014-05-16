@@ -203,7 +203,7 @@ void main() {
 
 }
 
-class SimpleTransformer<T> extends TypeTransformer {
+class SimpleTransformer<T extends DateTime> extends TypeTransformer {
   T decode(dynamic value) {
     return DateTime.parse(value);
   }
