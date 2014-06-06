@@ -5,5 +5,8 @@ description: Dartson is a Dart library that can be used to convert Dart objects 
 homepage: https://github.com/eredo/dartson
 environment:
   sdk: '>=1.4.0'
+dependencies:
+  barback: any
+  analyzer: any
 dev_dependencies:
   unittest: any
