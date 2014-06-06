@@ -319,36 +319,37 @@ Object _convertValue(TypeMirror valueType, Object value, String key) {
 InstanceMirror _initiateClass(ClassMirror classMirror) {
   _log("Parsing to class: ${_getName(classMirror.qualifiedName)}");
   Symbol constrMethod = null;
-  
+
   classMirror.declarations.forEach((sym, decl) {
     if (decl is MethodMirror && decl.isConstructor) {
       _log('Found constructor function: ${_getName(decl.qualifiedName)}');
-      
+
       if (decl.parameters.length == 0) {
         constrMethod = decl.constructorName;
       } else {
         bool onlyOptional = true;
         decl.parameters.forEach((p) => !p.isOptional && (onlyOptional = false));
-                
+
         if (onlyOptional) {
           constrMethod = decl.constructorName;
         }
       }
     }
   });
-  
+
   InstanceMirror obj;
-  if (constrMethod != null) {
-    _log("Found constructor: \"${_getName(constrMethod)}\"");
-    obj = classMirror.newInstance(constrMethod, []);
-    
-    _log("Created instance of type: ${_getName(obj.type.qualifiedName)}");
-  } else if (classMirror.qualifiedName == _QN_LIST) {
+  if (classMirror.qualifiedName == _QN_LIST) {
     _log('No constructor for list found, try to run empty one');
     obj = reflect([]);
   } else if (classMirror.qualifiedName == _QN_MAP) {
     _log('No constructor for map found');
-    obj = reflect({});
+    obj = reflect({
+    });
+  } else if (constrMethod != null) {
+    _log("Found constructor: \"${_getName(constrMethod)}\"");
+    obj = classMirror.newInstance(constrMethod, []);
+
+    _log("Created instance of type: ${_getName(obj.type.qualifiedName)}");
   } else {
     _log("No constructor found.");
     throw new NoConstructorError(classMirror);     
