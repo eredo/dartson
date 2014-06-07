@@ -12,6 +12,9 @@ class SimpleClass {
 
   @DartsonProperty(name: 'last_name')
   String lastName;
+  
+  @DartsonProperty(ignore: true)
+  String ignored;
 }
 
 class TestAnnotation {

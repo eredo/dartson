@@ -81,11 +81,25 @@ class FileCompiler extends _ErrorCollector {
           if (dartEnt != null && dartEnt.name != null && dartEnt.name.isNotEmpty) {
             jsonName = dartEnt.name;
           }
-
-          resp[jsonName] = d.name.name;
+          
+          if (dartEnt != null ? !dartEnt.ignore : true) {
+            resp[jsonName] = d.name.name;          
+          }
         });
       }
     });
+
+    return resp;
+  }
+
+  String buildToJsonMethod(Map<String, String> entityMap) {
+    String resp = "Map toJson() => {";
+    List<String> props = [];
+    entityMap.forEach((key, prop) {
+      props.add('"${key}": ${prop}');
+    });
+    resp += props.join(',');
+    resp += "};";
 
     return resp;
   }
@@ -103,7 +117,7 @@ DartsonProperty _getEntity(NodeList<Annotation> meta) {
         argsMap[name] = value;
       }
     });
-    return new DartsonProperty(ignore: argsMap['ignore'], name: argsMap['name']);
+    return new DartsonProperty(ignore: argsMap['ignore'] == true, name: argsMap['name']);
   } else {
     return null;
   }

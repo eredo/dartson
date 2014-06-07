@@ -46,11 +46,19 @@ void main() {
     expect(builder.text is String, true);
   });
 
+  Map entityMap;
   test('fetch entity map from simpleClass', () {
-    var map = compiler.buildEntityMap(simpleClass);
-    expect(map is Map, true);
-    expect(map['name'], 'name');
-    expect(map['id'], 'id');
-    expect(map['last_name'], 'lastName');
+    entityMap = compiler.buildEntityMap(simpleClass);
+    expect(entityMap is Map, true);
+    expect(entityMap['name'], 'name');
+    expect(entityMap['id'], 'id');
+    expect(entityMap['last_name'], 'lastName');
+    expect(entityMap['ignored'], null);
+  });
+
+  test('build toJson function', () {
+    var func = compiler.buildToJsonMethod(entityMap);
+
+    expect(func, 'Map toJson() => {"name": name,"id": id,"last_name": lastName};');
   });
 }
