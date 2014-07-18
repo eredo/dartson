@@ -8,5 +8,6 @@ environment:
 dependencies:
   barback: any
   analyzer: any
+  smoke: any
 dev_dependencies:
   unittest: any

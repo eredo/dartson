@@ -14,6 +14,8 @@ import 'package:analyzer/src/generated/scanner.dart';
 import 'package:source_maps/refactor.dart';
 import 'package:source_maps/span.dart' show SourceFile;
 
+const SIMPLE_TYPES = const['String', 'num', 'bool', 'int', 'List', 'Map'];
+
 class DartsonTransformer extends Transformer {
 
   DartsonTransformer();
@@ -78,12 +80,14 @@ class FileCompiler extends _ErrorCollector {
         // run through all delegated variables
         member.fields.variables.forEach((VariableDeclaration d) {
           var jsonName = d.name.name;
+          // fetch the correct name of the entity
           if (dartEnt != null && dartEnt.name != null && dartEnt.name.isNotEmpty) {
             jsonName = dartEnt.name;
           }
 
           if (dartEnt != null ? !dartEnt.ignore : true) {
-            resp[jsonName] = d.name.name;
+            // check the type and get a serializable value
+            resp[jsonName] = _isSimpleType(d) ? d.name.name : "${d.name.name}.toJson()";
           }
         });
       }
@@ -102,6 +106,16 @@ class FileCompiler extends _ErrorCollector {
     resp += "};";
 
     return resp;
+  }
+}
+
+bool _isSimpleType(VariableDeclaration d) {
+  if (d.parent is VariableDeclarationList) {
+    var type = d.parent.type as TypeName;
+    var val = type.name.beginToken.value();
+    return SIMPLE_TYPES.contains(val);
+  } else {
+    return false;
   }
 }
 
