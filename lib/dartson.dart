@@ -7,7 +7,7 @@ import 'dart:mirrors';
 import 'dart:convert';
 
 part 'src/exceptions.dart';
-part 'src/serializer.dart';
+part 'src/dartson_serializer.dart';
 part 'src/parser.dart';
 part 'src/type_transformer.dart';
 

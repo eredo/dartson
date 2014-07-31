@@ -61,6 +61,7 @@ void main() {
     var test = new TestClass1();
     test.name = "test1";
     String str = serialize(test);
+    print(str);
     expect(str,'{"name":"test1"}');
   });
   
@@ -86,7 +87,16 @@ void main() {
       '{"name":"test","list":[1,2,3],"getter":{"name":"get it"}}');
   });
 
+  test('parse: generic map', () {
+    print('begin parsing generic map');
+    MapClass test = parse('{"mapOfSimpleClass": {"test": {"name": "test"}, "test2": {"name": "test2"}}}', MapClass);
+
+    expect(test.mapOfSimpleClass["test"].name, "test");    
+    expect(test.mapOfSimpleClass["test2"].name, "test2");
+  });
+  
   test('parse: parser simple', () {
+    print('begin parsing simple');
     TestClass1 test = parse('{"name":"test","matter":true,"intNumber":2,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}', TestClass1);
     expect(test.name, 'test');
     expect(test.matter, true);
@@ -132,12 +142,6 @@ void main() {
     expect(list.list[0], 1);
   });
   
-  test('parse: generic map', () {
-    MapClass test = parse('{"map": {"test": {"name": "test"}, "test2": {"name": "test2"}}}', MapClass);
-
-    expect(test.map["test"].name, "test");    
-    expect(test.map["test2"].name, "test2");
-  });
   
   test('parse: simple map', () {
     SimpleMap test = parse('{"map": {"test": "test", "test2": "test2"}}', SimpleMap);
@@ -185,22 +189,6 @@ void main() {
       registerTransformer(new SimpleTransformer<DateTime>());
       expect(hasTransformer(DateTime), true);
     });
-
-    test('parse: DateTime', () {
-      var date = new DateTime.now();
-      var ctg = parse('{"testDate":"${date.toString()}"}', SimpleDateContainer);
-      expect(ctg.testDate is DateTime, true);
-      expect(ctg.testDate == date, true);
-    });
-
-    test('serialize: DateTime', () {
-      var obj = new SimpleDateContainer();
-      obj.testDate = new DateTime.now();
-      var str = serialize(obj);
-      expect(str, '{"testDate":"${obj.testDate.toString()}"}');
-    });
-
-
 }
 
 class SimpleTransformer<T> extends TypeTransformer {
@@ -273,7 +261,7 @@ class ListClass {
 }
 
 class MapClass {
-  Map<String, SimpleClass> map;
+  Map<String, SimpleClass> mapOfSimpleClass;
 }
 
 class SimpleList {

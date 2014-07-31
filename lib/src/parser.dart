@@ -9,6 +9,7 @@ final Symbol _QN_BOOL = reflectClass(bool).qualifiedName;
 final Symbol _QN_LIST = reflectClass(List).qualifiedName;
 final Symbol _QN_MAP = reflectClass(Map).qualifiedName;
 final Symbol _QN_OBJECT = reflectClass(Object).qualifiedName;
+final Symbol _QN_DATETIME = reflectClass(DateTime).qualifiedName;
 
 // map that contains all type transformer
 Map<String,TypeTransformer> _transformers = {};
@@ -143,6 +144,7 @@ void _fillObject(InstanceMirror objMirror, Map filler) {
       }
       
       _log('Try to fill object with: ${fieldName}: ${filler[fieldName]}');
+      
       if (filler[fieldName] != null) {
         objMirror.setField(new Symbol(varName), _convertValue(valueType,
             filler[fieldName], varName));
@@ -282,7 +284,9 @@ Object _convertValue(TypeMirror valueType, Object value, String key) {
     }
   } else if (valueType.qualifiedName == _QN_OBJECT) {
     return value;
-  } else if (_getName(valueType.qualifiedName) == "dynamic") {
+  } else if (valueType.qualifiedName == _QN_DATETIME) {
+    return DateTime.parse(value);
+  }  else if (_getName(valueType.qualifiedName) == "dynamic") {
     // dynamic is used in JavaScript runtime
     // if this appears something went wrong
     // TODO: Think of a correct way to handle this problem / exception?!
@@ -323,15 +327,16 @@ InstanceMirror _initiateClass(ClassMirror classMirror) {
   classMirror.declarations.forEach((sym, decl) {
     if (decl is MethodMirror && decl.isConstructor) {
       _log('Found constructor function: ${_getName(decl.qualifiedName)}');
-      
-      if (decl.parameters.length == 0) {
-        constrMethod = decl.constructorName;
-      } else {
-        bool onlyOptional = true;
-        decl.parameters.forEach((p) => !p.isOptional && (onlyOptional = false));
-                
-        if (onlyOptional) {
+      if (MirrorSystem.getName(decl.constructorName).isEmpty) {
+        if (decl.parameters.length == 0) {
           constrMethod = decl.constructorName;
+        } else {
+          bool onlyOptional = true;
+          decl.parameters.forEach((p) => !p.isOptional && (onlyOptional = false));
+                  
+          if (onlyOptional) {
+            constrMethod = decl.constructorName;
+          }
         }
       }
     }
@@ -340,7 +345,7 @@ InstanceMirror _initiateClass(ClassMirror classMirror) {
   InstanceMirror obj;
   if (constrMethod != null) {
     _log("Found constructor: \"${_getName(constrMethod)}\"");
-    obj = classMirror.newInstance(constrMethod, []);
+    obj = classMirror.newInstance(const Symbol(""), []);
     
     _log("Created instance of type: ${_getName(obj.type.qualifiedName)}");
   } else if (classMirror.qualifiedName == _QN_LIST) {
