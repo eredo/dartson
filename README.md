@@ -5,7 +5,7 @@
 Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean of `fromJSON` and `toJSON` functions by using dart:mirrors reflection. **It works after dart2js compiling.**
 
 ## Transformer implementation
-This build contains the first version of a transformer. ** IT IS STILL UNDER DEVELOPMENT AND NOT COMPLETELY TESTED YET**
+This build contains the first version of a transformer. **IT IS STILL UNDER DEVELOPMENT AND NOT COMPLETELY TESTED YET**
 Add the following lines to the pubspec.yaml in order to use the transformer:
 
 ```
@@ -18,8 +18,8 @@ When using the transformer, mirrors are completely removed when pub build is cal
 
 ### Features not completed yet
 - Support of transformers
-- Support of nested generics (example: Map<String,List<MyClass>>)
-- Support of methods within entities (example: String getAName() => "${whatEver}.Name";)
+- Support of nested generics (example: ```Map<String,List<MyClass>>```)
+- Support of methods within entities (example: ```String getAName() => "${whatEver}.Name";```)
 - "as" import of dartson within a library separated into parts
 - Complete end2end testing
 
