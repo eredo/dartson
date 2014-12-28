@@ -226,10 +226,10 @@ class TestClass1 {
   TestClass1 child;
   int intNumber;
   
-  @DartsonProperty(ignore:true)
+  @Property(ignore:true)
   bool ignored;
   
-  @DartsonProperty(name:"the_renamed")
+  @Property(name:"the_renamed")
   String renamed;
 
   TestClass1();

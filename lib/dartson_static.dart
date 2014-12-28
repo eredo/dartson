@@ -1,61 +1,55 @@
 library dartson.static;
 
-import 'dart:convert' show JSON, JsonCodec;
+export 'src/annotations.dart';
+export 'src/static_entity.dart';
+import 'src/static_entity.dart';
 
-// for unittesting will be removed on compilation
-import 'dart:mirrors' as mirror;
+import 'dart:convert' show JSON;
 
-Map<Type,Function> _initClass = {};
-DartsonClassInitiator _initiator;
+part 'src/serializer_static.dart';
 
-abstract class CompiledDartsonEntity {
-  void dFromObject(Map dataObject);
-  Map dToObject();
+
+dynamic parse(String jsonStr, StaticEntity clazz) {
+  return map(JSON.decode(jsonStr), clazz);
 }
 
-abstract class DartsonClassInitiator {}
-
-void registerType(Type clazz, Function constr) {
-  _initClass[clazz] = constr;
-}
-
-dynamic parse(String jsonStr, Type clazz) {
+List parseList(String jsonStr, StaticEntity clazz) {
+  List fillList = JSON.decode(jsonStr);
   
-}
-
-List parseList(String jsonStr, Type clazz) {
-  
-}
-
-dynamic map(Map dataObject, Type clazz) {
-  
-}
-
-List mapList(List<Map> dataMap, Type clazz) {
-    
-}
-
-dynamic fill(Map dataObject, Object object) {
-  if (object is CompiledDartsonEntity) {
-    object.dFromObject(dataObject);
+  if (!(fillList is List)) {
+    throw 'Unable to parse none List type as List';
   }
   
+  return mapList(fillList, clazz);
+}
+
+dynamic map(Map dataObject, StaticEntity clazz) {
+  clazz.dartsonEntityDecode(dataObject);
+  return clazz;
+}
+
+List mapList(List<Map> dataMap, StaticEntity clazz) {
+  List returnList = [];
+  
+  var firstItem = true;
+  dataMap.forEach((item) {
+    var cl;
+    
+    if (firstItem) {
+      firstItem = false;
+      cl = clazz;
+    } else {
+      cl = clazz.newEntity();        
+    }
+    
+    cl.dartsonEntityDecode(item);
+    returnList.add(cl);
+  });
+  
+  return returnList;
+}
+
+dynamic fill(Map dataObject, StaticEntity object) {
+  object.dartsonEntityDecode(dataObject);
   return object;
-}
-
-/**
- * Serializes the [object] to a JSON string.
- */
-String serialize(Object object) {
-  return JSON.encode(object);
-}
-
-setInitiator(DartsonClassInitiator init) {
-  _initiator = init;
-}
-
-CompiledDartsonEntity initEntity(Type type, Object data) {
-  // this function gets rewritten on compilation
-  var clazz = mirror.reflectClass(type).newInstance(#dConstr, []);
-  return fill(data, clazz.reflectee);
 }

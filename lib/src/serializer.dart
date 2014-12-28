@@ -73,7 +73,7 @@ Object _serializeObject(Object obj) {
 
 /**
  * Checks the DeclarationMirror [variable] for annotations and adds
- * the value to the [result] map. If there's no [DartsonProperty] annotation 
+ * the value to the [result] map. If there's no [Property] annotation 
  * with a different name set it will use the name of [symbol].
  */
 void _pushField(Symbol symbol, DeclarationMirror variable,
@@ -84,7 +84,7 @@ void _pushField(Symbol symbol, DeclarationMirror variable,
   _log("Start serializing field: ${fieldName}");
   
   // check if there is a DartsonProperty annotation
-  DartsonProperty prop = _getProperty(variable);
+  Property prop = _getProperty(variable);
   _log("Property: ${prop}");
   
   if (prop != null && prop.name != null) {  

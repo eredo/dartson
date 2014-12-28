@@ -1,0 +1,11 @@
+name: dartson_test_project
+version: 0.1.0
+author: Eric Schneller
+description: A sample application
+dependencies:
+  browser: any
+  dartson:
+    path: ../../
+  unittest: any
+transformers:
+- dartson

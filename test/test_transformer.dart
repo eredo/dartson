@@ -24,41 +24,46 @@ void main() {
       }
     }), true);
   });
+  
+  skip_test('should find a SimpleIdentifier prefix for the dartson import', () {
+    expect(compiler.findDartsonImportName() != null, true);
+    expect(compiler.findDartsonImportName().toString(), 'ddd');
+  });
 
   Annotation dartsonEntity;
   test('should show the metadata', () {
     simpleClass = compiler.compilationUnit.declarations.firstWhere((m)
       => m is ClassDeclaration && m.name.name == 'SimpleClass');
-
-    expect(simpleClass.metadata.any((Annotation n) {
-      return n.name.name == 'DartsonEntity';
-    }), true);
+    expect(simpleClass.metadata.any((Annotation n) => n.name.name == 'ddd.Entity' ), true);
   });
 
   test('the compiler should contain the SimpleClass', () {
     expect(compiler.entities.any((m) => m.name.name == 'SimpleClass'), true);
   });
 
-  test('inject the toJson method', () {
-    compiler.editor.editor.edit(simpleClass.endToken.end - 1, simpleClass.endToken.end - 1, "Map toJson() => {};");
-    var builder = compiler.editor.editor.commit();
-    builder.build("./fixture/simple_class.dart");
-    expect(builder.text is String, true);
-  });
-
-  Map entityMap;
+  List<PropertyDefinition> entityMap;
   test('fetch entity map from simpleClass', () {
     entityMap = compiler.buildEntityMap(simpleClass);
-    expect(entityMap is Map, true);
-    expect(entityMap['name'], 'name');
-    expect(entityMap['id'], 'id');
-    expect(entityMap['last_name'], 'lastName');
-    expect(entityMap['ignored'], null);
+    expect(entityMap.length, 6);
+    expect(entityMap[0].type, 'String');
+    expect(entityMap[5].type, 'Map');
+    expect(entityMap[5].typeArguments.length, 2);
+    expect(entityMap[4].typeArguments.length, 1);
+    expect(entityMap[4].typeArguments[0], 'ChildClass');
+    expect(entityMap[5].typeArguments[0], 'String');
+    expect(entityMap[5].typeArguments[1], 'ChildClass');
   });
 
-  test('build toJson function', () {
-    var func = compiler.buildToJsonMethod(entityMap);
-
-    expect(func, 'Map toJson() => {"name": name,"id": id,"last_name": lastName};');
+  skip_test('build code', () {
+    var code = compiler.build('package:dartson/test/simple_class.dart');
+    var file = new File('./tmp/simple_class.dart');
+    file.writeAsStringSync(code);
+  });
+  
+  test('compile parts', () {
+    var compiler = new FileCompiler('./fixture/part1_class.dart');
+    var code = compiler.build('package:dartson/test/part1_class.dart');
+    var file = new File('./tmp/part1_class.dart');
+    file.writeAsStringSync(code);
   });
 }

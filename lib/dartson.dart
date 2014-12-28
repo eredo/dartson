@@ -1,7 +1,10 @@
 library dartson;
 
+export 'src/annotations.dart';
+import 'src/annotations.dart';
+
 @MirrorsUsed(
-    metaTargets: const [DartsonProperty],
+    metaTargets: const [Property],
     override: '*')
 import 'dart:mirrors';
 import 'dart:convert';
@@ -11,60 +14,9 @@ part 'src/serializer.dart';
 part 'src/parser.dart';
 part 'src/type_transformer.dart';
 
-/**
- * Set this to true to receive log output of dartson.
- */
+
+/// Set this to true to receive log output of dartson.
 bool DARTSON_DEBUG = false;
-
-/**
- * Contains the description of each class which is has the annotation
- * [DartsonEntity]. This map should be used in dart2js.
- */
-Map<ClassMirror,EntityDescription> ENTITY_MAP = null;
-
-/**
- * Annotation class to mark a class as serializable. This is required
- * if the dartson builder has to build an entity map for dart2js. 
- * @deprecated Currently not required.
- */
-class DartsonEntity {
-  const DartsonEntity();
-}
-
-/**
- * Annotation class to describe properties of a class member.
- */
-class DartsonProperty {
-  final bool _ignore;
-  final String name;
-  
-  const DartsonProperty({bool ignore, String name}) :
-    this._ignore = ignore,
-    this.name = name;
-  
-  bool get ignore => _ignore == null ? false : _ignore;
-  String toString() => "DartsonProperty: Name: ${name} , Ignore: ${ignore}";
-}
-
-/**
- * Container of the properties for a DartsonEntity in the [ENTITY_MAP].
- */
-class EntityDescription {
-  Map<String,EntityPropertyDescription> properties = {};
-  
-  EntityDescription();
-}
-
-/**
- * Description of a class member of a DartsonEntity in the [ENTITY_MAP].
- */
-class EntityPropertyDescription {
-  final String name;
-  final bool ignore;
-  final Type type;
-  
-  EntityPropertyDescription(this.name, this.type, [this.ignore = false]);
-}
 
 void _log(Object msg) {
   if (DARTSON_DEBUG) {
@@ -73,14 +25,12 @@ void _log(Object msg) {
 }
 
 
-/**
- * Looks for a [DartsonProperty] annotation in the metadata of [variable]. 
- */
-DartsonProperty _getProperty(DeclarationMirror variable) {
-  DartsonProperty prop;
+/// Looks for a [Property] annotation in the metadata of [variable].
+Property _getProperty(DeclarationMirror variable) {
+  Property prop;
   
   variable.metadata.forEach((meta) {
-    if (meta.reflectee is DartsonProperty) {
+    if (meta.reflectee is Property) {
       prop = meta.reflectee;
     }
   });

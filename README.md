@@ -4,12 +4,55 @@
 
 Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean of `fromJSON` and `toJSON` functions by using dart:mirrors reflection. **It works after dart2js compiling.**
 
-> #### NOTICE: The dart2js functionality works since Dart SDK 1.1.0.
+## Transformer implementation
+This build contains the first version of a transformer. ** IT IS STILL UNDER DEVELOPMENT AND NOT COMPLETELY TESTED YET**
+Add the following lines to the pubspec.yaml in order to use the transformer:
 
-A faster version of parsing the object is currently under development. It will provide fromJson and toJson methods after compilation using transformers.
+```
+transformers:
+- dartson
+```
+
+Remove the @MirrorsUsed annotation and the assigned import if it's no longer used by any other library.
+When using the transformer, mirrors are completely removed when pub build is called.
+
+### Features not completed yet
+- Support of transformers
+- Support of nested generics (example: Map<String,List<MyClass>>)
+- Support of methods within entities (example: String getAName() => "${whatEver}.Name";)
+- "as" import of dartson within a library separated into parts
+- Complete end2end testing
+
+
+### How the transformer works
+
+1. All dartson imports "package:dartson/dartson.dart" are rewritten to "package:dartson/dartson_static.dart"
+2. Classes that are annotated using "@Entity" receive 3 methods "dartsonEntityEncode", "dartsonEntityDecode", "newEntity" and implement "StaticEntity"
+3. All dartson method calls "parse", "parseList", "map", "mapList" are rewritten using an instance of the entity
+
+```
+var list = parseList('[{"name":"test"},{"name":"x"}]', MyEntity);
+```
+
+will be changed to:
+
+```
+var list = parseList('[{"name":"test"},{"name":"x"}]', new MyEntity());
+```
+
+### Known issues:
+
+- Entities cannot contain one of the following methods: "dartsonEntityEncode", "dartsonEntityDecode", "newEntity"
+- The interface StaticEntity will be added to the global namespace, there shouldn't be any other class named the same
+- Entities need to have a default constructor without any arguments
+- Entities of third party libraries do not work
+- Entities can only extend other Entities
+
 
 ## Latest changes
 - dartson now supports custom transformer for specific type / an example for a basic DateTime converter can be found in:  
+- transformer support
+
 
 ## Serializing objects in dart
 
@@ -18,16 +61,14 @@ library example;
 
 import 'package:dartson/dartson.dart';
 
-@MirrorsUsed(targets:const['example'],override:'*')
-import 'dart:mirrors';
-
+@Entity()
 class EntityClass {
   String name;
   
-  @DartsonProperty(name:"renamed")
+  @Property(name:"renamed")
   bool otherName;
   
-  @DartsonProperty(ignore:true)
+  @Property(ignore:true)
   String notVisible;
   
   // private members are never serialized
@@ -48,6 +89,7 @@ void main() {
 }
 ```
 
+
 ## Parsing json to dart object
 
 ```dart
@@ -55,17 +97,15 @@ library example;
 
 import 'package:dartson/dartson.dart';
 
-@MirrorsUsed(targets:const['example'],override:'*')
-import 'dart:mirrors';
-
+@Entity()
 class EntityClass {
   String name;
   String _setted;
   
-  @DartsonProperty(name:"renamed")
+  @Property(name:"renamed")
   bool otherName;
   
-  @DartsonProperty(ignore:true)
+  @Property(ignore:true)
   String notVisible;
   
   List<EntityClass> children;
@@ -91,6 +131,7 @@ void main() {
 ```
 
 ## Mapping Maps and Lists to dart objects
+
 Frameworks like Angular.dart come with several HTTP services which already transform the HTTP response to a map using JSON.encode. To use those encoded Maps or Lists use `map` and `mapList`.
 
 ```dart
@@ -98,17 +139,15 @@ library example;
 
 import 'package:dartson/dartson.dart';
 
-@MirrorsUsed(targets:const['example'],override:'*')
-import 'dart:mirrors';
-
+@Entity()
 class EntityClass {
   String name;
   String _setted;
   
-  @DartsonProperty(name:"renamed")
+  @Property(name:"renamed")
   bool otherName;
   
-  @DartsonProperty(ignore:true)
+  @Property(ignore:true)
   String notVisible;
   
   List<EntityClass> children;
@@ -186,4 +225,4 @@ Version 0.2.0 will have the functionality to define the way you want to encode /
 ## TODO
 
 - Better dart2js solution
-- Handle recrusive errors
+- Handle recursive errors

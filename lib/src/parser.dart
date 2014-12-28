@@ -137,7 +137,7 @@ void _fillObject(InstanceMirror objMirror, Map filler) {
       }
       
       // check if the property is renamed by DartsonProperty
-      DartsonProperty prop = _getProperty(decl);
+      Property prop = _getProperty(decl);
       if (prop != null && prop.name != null) {
         fieldName = prop.name;
       }
@@ -151,19 +151,6 @@ void _fillObject(InstanceMirror objMirror, Map filler) {
   });
   
   _log("Filled object completly: ${filler}");
-}
-
-/**
- *  Throws [EntityDescriptionMissing] if the entity is not descriped in ENTITY_MAP.
- */
-TypeMirror _getTypeByEntityMap(ClassMirror classMirror, String varName) {
-  EntityDescription descr = ENTITY_MAP[classMirror];
-  
-  if (descr == null) {
-    throw new EntityDescriptionMissing(classMirror);
-  } else {
-    return reflectClass(descr.properties[varName].type);
-  }
 }
 
 bool _isSimpleType(Type type) {
