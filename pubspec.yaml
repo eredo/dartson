@@ -8,6 +8,7 @@ environment:
 dependencies:
   analyzer: any
   barback: any
+  logging: any
   source_maps: 0.9.3
 dev_dependencies:
   unittest: any

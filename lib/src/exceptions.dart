@@ -1,9 +1,8 @@
 part of dartson;
 
-/**
- * This exception is thrown if the parser tries to convert
- * a value of a different type.
- */
+
+/// This exception is thrown if the parser tries to convert
+/// a value of a different type.
 class IncorrectTypeTransform extends Error {
   final String _field;
   final String _type;
@@ -20,10 +19,9 @@ class IncorrectTypeTransform extends Error {
       "type. Requires [${_type}] and found [${_foundType}]"; 
 }
 
-/**
- * This exception is thrown when a Class of [mirr] should be initiated but
- * doesn't have a constructor without or only optional arguments.
- */
+
+/// This exception is thrown when a Class of [mirr] should be initiated but
+/// doesn't have a constructor without or only optional arguments.
 class NoConstructorError extends Error {
   final String _clazz;
   
@@ -34,10 +32,9 @@ class NoConstructorError extends Error {
         "without arguments.";
 }
 
-/**
- * This exception only appears in JavaScript if the [ENTITY_MAP] doesn't contain
- * a description of a Class which dartson tries to parse.
- */
+
+/// This exception only appears in JavaScript if the [ENTITY_MAP] doesn't contain
+/// a description of a Class which dartson tries to parse.
 class EntityDescriptionMissing extends Error {
   final String _clazz;
   

@@ -78,12 +78,14 @@ class EntityClass {
 }
 
 void main() {
+  var dson = new Dartson.JSON();
+
   EntityClass object = new EntityClass();
   object.name = "test";
   object.otherName = "blub";
   object.notVisible = "hallo";
   
-  String jsonString = serialize(object);
+  String jsonString = dson.encode(object);
   print(jsonString);
   // will return: '{"name":"test","renamed":"blub","doGetter":"name"}'
 }
@@ -115,7 +117,9 @@ class EntityClass {
 }
 
 void main() {
-  EntityClass object = parse('{"name":"test","renamed":"blub","notVisible":"it is", "setted": "awesome"}', EntityClass);
+  var dson = new Dartson.JSON();
+
+  EntityClass object = dson.decode('{"name":"test","renamed":"blub","notVisible":"it is", "setted": "awesome"}', new EntityClass());
   
   print(object.name); // > test
   print(object.otherName); // > blub
@@ -123,7 +127,7 @@ void main() {
   print(object.setted); // > awesome
   
   // to parse a list of items use [parseList]
-  List<EntityClass> list = parseList('[{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}]', EntityClass);
+  List<EntityClass> list = dson.decode('[{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}]', new EntityClass(), true);
   print(list.length); // > 2
   print(list[0].name); // > test
   print(list[0].children[0].name); // > child1
@@ -157,14 +161,16 @@ class EntityClass {
 }
 
 void main() {
-  EntityClass object = map({"name":"test","renamed":"blub","notVisible":"it is", "setted": "awesome"}, EntityClass);  
+  var dson = new Dartson.JSON();
+
+  EntityClass object = dson.map({"name":"test","renamed":"blub","notVisible":"it is", "setted": "awesome"}, new EntityClass());
   print(object.name); // > test
   print(object.otherName); // > blub
   print(object.notVisible); // > it is
   print(object.setted); // > awesome
   
   // to parse a list of items use [parseList]
-  List<EntityClass> list = mapList([{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}], EntityClass);
+  List<EntityClass> list = dson.map([{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}], new EntityClass(), true);
   print(list.length); // > 2
   print(list[0].name); // > test
   print(list[0].children[0].name); // > child1
@@ -206,23 +212,10 @@ void main() {
 library test;
 
 import 'package:dartson/dartson.dart';
-import 'package:dartson/default_transformers.dart' as dd;
+import 'package:dartson/transformers/date_time.dart';
 
 void main() {
-  dd.register();
+  var dson = new Dartson.JSON();
+  dson.addTransformer(new DateTimeParser(), DateTime);
 }
 ```
-
-## Roadmap
-
-#### dart2js
-I'm thinking of a transformer which saves the hole mirrors reflection and increases the performance. It also should reduce the JavaScript size.
-
-#### Custom serializing handler (implemented since 0.1.5)
-Version 0.2.0 will have the functionality to define the way you want to encode / decode specific types.
-
-
-## TODO
-
-- Better dart2js solution
-- Handle recursive errors

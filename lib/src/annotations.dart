@@ -1,17 +1,14 @@
 library dartson.annotations;
 
-/**
- * Annotation class to mark a class as serializable. This is required
- * if the dartson builder has to build an entity map for dart2js. 
- * @deprecated Currently not required.
- */
+
+/// Annotation class to mark a class as serializable. This is required
+/// if the dartson builder has to build an entity map for dart2js. 
 class Entity {
   const Entity();
 }
 
-/**
- * Annotation class to describe properties of a class member.
- */
+
+/// Annotation class to describe properties of a class member.
 class Property {
   final bool _ignore;
   final String name;

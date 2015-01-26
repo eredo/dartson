@@ -183,7 +183,7 @@ class FileCompiler extends _ErrorCollector {
     
     visitor.methodInvocations.forEach((inv) {
       var arg = inv.argumentList.arguments[1];
-      editor.editor.edit(arg.beginToken.offset, arg.endToken.end, 'new ${arg.toString()}()');
+      editor.editor.edit(arg.beginToken.offset, arg.endToken.end, '"${arg.toString()}"');
     });
   }
   
@@ -329,8 +329,7 @@ class DartsonMethodVisitor<R> extends AstVisitor<R> {
   /// Visits all method invocations and checks if it's a dartson call.
   @override
   R visitMethodInvocation(MethodInvocation node) {
-    if ((prefix != null ? node.target.toString() == prefix : node.target == null) &&
-      _DARTSON_METHODS.contains(node.methodName.toString())) {  
+    if (node.methodName.toString() == 'addTransformer') {  
       methodInvocations.add(node);
     }
     

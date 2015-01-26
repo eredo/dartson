@@ -3,53 +3,98 @@ library dartson.static;
 export 'src/annotations.dart';
 export 'src/static_entity.dart';
 import 'src/static_entity.dart';
+import './type_transformer.dart';
 
-import 'dart:convert' show JSON;
+import 'package:logging/logging.dart';
+import 'dart:convert' show Codec, JSON;
 
 part 'src/serializer_static.dart';
 
+final Map _transformers = {};
 
-dynamic parse(String jsonStr, StaticEntity clazz) {
-  return map(JSON.decode(jsonStr), clazz);
-}
-
-List parseList(String jsonStr, StaticEntity clazz) {
-  List fillList = JSON.decode(jsonStr);
+/// Static version of dartson.
+class Dartson {
+  final Codec _codec;
+  final Logger _log;
+  final Map<String, TypeTransformer> transformers = {};
   
-  if (!(fillList is List)) {
-    throw 'Unable to parse none List type as List';
+  Dartson(this._codec, [String identifier = 'dartson']) : _log = new Logger(identifier) {
+    _log.fine('Initiate static Dartson class.');
+    transformers.addAll(_transformers);
   }
   
-  return mapList(fillList, clazz);
-}
-
-dynamic map(Map dataObject, StaticEntity clazz) {
-  clazz.dartsonEntityDecode(dataObject);
-  return clazz;
-}
-
-List mapList(List<Map> dataMap, StaticEntity clazz) {
-  List returnList = [];
+  factory Dartson.JSON([String identifier = 'dartson']) => new Dartson(JSON, identifier);
   
-  var firstItem = true;
-  dataMap.forEach((item) {
-    var cl;
-    
-    if (firstItem) {
-      firstItem = false;
-      cl = clazz;
-    } else {
-      cl = clazz.newEntity();        
+  void addTransformer(TypeTransformer transformer, String type) {
+    transformers[type] = transformer;
+  }
+  
+  bool hasTransformer(String type) => transformers[type] != null;
+  
+  Object map(Object data, StaticEntity clazz, [bool isList = false]) {
+    if (data is List && isList) {
+      List returnList = [];
+        
+      var firstItem = true;
+      data.forEach((item) {
+        var cl;
+        
+        if (firstItem) {
+          firstItem = false;
+          cl = clazz;
+        } else {
+          cl = clazz.newEntity();        
+        }
+        
+        cl.dartsonEntityDecode(item);
+        returnList.add(cl);
+      });
+      
+      return returnList;
+    } else if (data is List || isList) {
+      throw 'Incompatible none list type to list.';
+    } else {      
+      clazz.dartsonEntityDecode(data);
+      return clazz;
     }
-    
-    cl.dartsonEntityDecode(item);
-    returnList.add(cl);
-  });
+  }
   
-  return returnList;
-}
+  Object serialize(Object data, {String type}) {
+    var transformer;
+    
+    if (data is List) {
+      return _serializeList(data);
+    } else if (data is Map) {
+      return _serializeMap(data);
+    } else if (data is StaticEntity) {
+      return data.dartsonEntityEncode();
+    } else if (type != null && (transformer = transformers[type]) != null) {
+      return transformer.encode(data);
+    } else {
+      throw 'Unable to serialize none Dartson.Entity';
+    }
+  }
+  
+  dynamic encode(Object clazz) {
+    return _codec.encode(serialize(clazz));
+  }
+  
+  dynamic decode(var encoded, Object object, [bool isList = false]) {
+    return map(_codec.decode(encoded), object, isList);
+  }
+  
+  List _serializeList(List list) {
+    return list.map((i) => serialize(i)).toList();
+  }
+  
 
-dynamic fill(Map dataObject, StaticEntity object) {
-  object.dartsonEntityDecode(dataObject);
-  return object;
+  Map _serializeMap(Map map) {
+    Map newMap = new Map<String,Object>();
+    map.forEach((key, val) {
+      if (val != null) newMap[key] = serialize(val);
+    });
+  
+    return newMap;
+  }
+   
 }

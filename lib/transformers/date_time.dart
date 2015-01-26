@@ -1,4 +1,6 @@
-part of dartson.default_transformers;
+library dartson.transformers.DateTime;
+
+import 'package:dartson/type_transformer.dart';
 
 /// A simple DateTime transformer which uses the toString() method.
 class DateTimeParser<T> extends TypeTransformer {

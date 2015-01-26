@@ -1,4 +1,4 @@
-part of dartson;
+library dartson.type_transformer;
 
 /**
  * The interface for creating new transformers.

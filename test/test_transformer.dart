@@ -54,7 +54,7 @@ void main() {
     expect(entityMap[5].typeArguments[1], 'ChildClass');
   });
 
-  skip_test('build code', () {
+  test('build code', () {
     var code = compiler.build('package:dartson/test/simple_class.dart');
     var file = new File('./tmp/simple_class.dart');
     file.writeAsStringSync(code);
