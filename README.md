@@ -202,7 +202,8 @@ In order to use the TypeTransformer you need to register the transformer in a ma
 ```dart
 // ...
 void main() {
-  registerTransformer(new DateTimeParser<DateTime>());
+  var dson = new Dartson.JSON();
+  dson.addTransformer(new DateTimeParser(), DateTime);
 }
 ```
 
