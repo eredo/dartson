@@ -8,15 +8,29 @@ import './type_transformer.dart';
 import 'package:logging/logging.dart';
 import 'dart:convert' show Codec, JSON;
 
-part 'src/serializer_static.dart';
+final _SimpleTypeTransformer _st = new _SimpleTypeTransformer();
+final Map<Type, TypeTransformer> _transformers = {
+  String: _st,
+  num: _st,
+  int: _st,
+  bool: _st,
+  Map: _st,
+  List: _st
+};
 
-final Map _transformers = {};
+class _SimpleTypeTransformer extends TypeTransformer {
+  @override
+  decode(value) => value;
+
+  @override
+  encode(value) => value;
+}
 
 /// Static version of dartson.
-class Dartson {
+class Dartson extends TypeTransformerProvider {
   final Codec _codec;
   final Logger _log;
-  final Map<String, TypeTransformer> transformers = {};
+  final Map<Type, TypeTransformer> transformers = {};
   
   Dartson(this._codec, [String identifier = 'dartson']) : _log = new Logger(identifier) {
     _log.fine('Initiate static Dartson class.');
@@ -25,11 +39,12 @@ class Dartson {
   
   factory Dartson.JSON([String identifier = 'dartson']) => new Dartson(JSON, identifier);
   
-  void addTransformer(TypeTransformer transformer, String type) {
+  void addTransformer(TypeTransformer transformer, Type type) {
     transformers[type] = transformer;
   }
   
-  bool hasTransformer(String type) => transformers[type] != null;
+  bool hasTransformer(Type type) => transformers[type] != null;
+  TypeTransformer getTransformer(Type type) => transformers[type];
   
   Object map(Object data, StaticEntity clazz, [bool isList = false]) {
     if (data is List && isList) {
@@ -46,7 +61,7 @@ class Dartson {
           cl = clazz.newEntity();        
         }
         
-        cl.dartsonEntityDecode(item);
+        cl.dartsonEntityDecode(item, this);
         returnList.add(cl);
       });
       
@@ -54,12 +69,12 @@ class Dartson {
     } else if (data is List || isList) {
       throw 'Incompatible none list type to list.';
     } else {      
-      clazz.dartsonEntityDecode(data);
+      clazz.dartsonEntityDecode(data, this);
       return clazz;
     }
   }
   
-  Object serialize(Object data, {String type}) {
+  Object serialize(Object data, {Type type}) {
     var transformer;
     
     if (data is List) {
@@ -67,7 +82,7 @@ class Dartson {
     } else if (data is Map) {
       return _serializeMap(data);
     } else if (data is StaticEntity) {
-      return data.dartsonEntityEncode();
+      return data.dartsonEntityEncode(this);
     } else if (type != null && (transformer = transformers[type]) != null) {
       return transformer.encode(data);
     } else {

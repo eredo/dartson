@@ -14,6 +14,8 @@ class Model {
   String renamed;
   
   List<ModelChild> children;
+  
+  DateTime created;
 }
 
 @Entity()

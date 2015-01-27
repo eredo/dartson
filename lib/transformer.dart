@@ -114,7 +114,7 @@ class FileCompiler extends _ErrorCollector {
   String build(String url) {
     _prepareEntities();
     _rewriteImports();
-    _rewriteCalls();
+//    _rewriteCalls();
     _rewriteClassDeclarations();
     
     var builder = editor.editor.commit();
@@ -271,7 +271,12 @@ class FileCompiler extends _ErrorCollector {
   
   /// Builds the encoding method for the [Entity] annotated class.
   String buildEncodingMethod(List<PropertyDefinition> definitions) {
-    List<String> resp = ['Map ${_DARTSON_ENCODE_METHOD}() {'];
+    var ttp = 'TypeTransformerProvider';
+    if (_dartsonPrefix != null) {
+      ttp = '${_dartsonPrefix}.${ttp}';
+    }
+    
+    List<String> resp = ['Map ${_DARTSON_ENCODE_METHOD}(${ttp} dson) {'];
     resp.add('var obj = {};');
     
     resp.addAll(definitions.map((def) {
@@ -295,7 +300,12 @@ class FileCompiler extends _ErrorCollector {
   
   /// Builds the decoding method for the [Entity] annotated class.
   String buildDecodingMethod(List<PropertyDefinition> definitions) {
-    List<String> resp = ["void ${_DARTSON_DECODE_METHOD}(Map obj) {"];
+    var ttp = 'TypeTransformerProvider';
+  if (_dartsonPrefix != null) {
+    ttp = '${_dartsonPrefix}.${ttp}';
+  }
+  
+    List<String> resp = ["void ${_DARTSON_DECODE_METHOD}(Map obj, ${ttp} dson) {"];
     resp.addAll(definitions.map((def) {
       if (def.isSimpleType) {
         return _simpleTransformer.decode('this', 'obj', def);
@@ -332,6 +342,7 @@ class DartsonMethodVisitor<R> extends AstVisitor<R> {
     if (node.methodName.toString() == 'addTransformer') {  
       methodInvocations.add(node);
     }
+
     
     return null;
   }
@@ -437,12 +448,20 @@ class _EntityTransformWriter extends _TypeTransformWriter {
     definition == null ? throw 'Unable to decode Entity without a definition.' :
       definition.name != null ?
         'if (${object}["${definition.serializedName}"] != null) {\n' +
-        '  ${target}.${definition.name} = new ${definition.type}();\n' +
-        '  ${target}.${definition.name}.${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"]);\n'
+        '  if (dson.hasTransformer(${definition.type})) {' +
+        '    ${target}.${definition.name} = dson.getTransformer(${definition.type}).decode(${object}["${definition.serializedName}"]);\n' +
+        '  } else {\n' +
+        '    ${target}.${definition.name} = new ${definition.type}();\n' +
+        '    ${target}.${definition.name}.${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"], dson);\n'
+        '  }\n' +
         '}' :
         'if (${object} != null) {\n' +
-        '  ${target} = new ${definition.type}();\n' +
-        '  ${target}.${_DARTSON_DECODE_METHOD}(${object});\n' +
+        '  if (dson.hasTransformer(${definition.type})) {' +
+        '    ${target} = dson.getTransformer(${definition.type}).decode(${object});\n' +
+        '  } else {\n' +
+        '    ${target} = new ${definition.type}();\n' +
+        '    ${target}.${_DARTSON_DECODE_METHOD}(${object}, dson);\n' +
+        '  }\n' +
         '}';
   
 
@@ -451,10 +470,18 @@ class _EntityTransformWriter extends _TypeTransformWriter {
     definition == null ? throw 'Unable to encode Entity without a definition.' :
       definition.name != null ?
         'if (${target}.${definition.name} != null) {\n' +
-        '  ${object}["${definition.serializedName}"] = ${target}.${definition.name}.${_DARTSON_ENCODE_METHOD}();\n' +
+        '  if (dson.hasTransformer(${definition.type})) {' +
+        '    ${object}["${definition.serializedName}"] = dson.getTransformer(${definition.type}).encode(${target}.${definition.name});\n' +
+        '  } else {\n' +
+        '    ${object}["${definition.serializedName}"] = ${target}.${definition.name}.${_DARTSON_ENCODE_METHOD}(dson);\n' +
+        '  }\n' +
         '}' :
         'if (${target} != null) {\n' +
-        '  ${object} = ${target}.${_DARTSON_ENCODE_METHOD}();\n' +
+        '  if (dson.hasTransformer(${definition.type})) {' +
+        '    ${object} = dson.getTransformer(${definition.type}).encode(${target});\n' +
+        '  } else {\n' +
+        '    ${object} = ${target}.${_DARTSON_ENCODE_METHOD}(dson);\n' +
+        '  }\n' +
         '}';
 }
 

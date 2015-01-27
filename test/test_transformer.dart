@@ -17,6 +17,7 @@ void main() {
   });
 
   CompilationUnitMember simpleClass;
+  
   test('should contain the SimpleClass declaration', () {
     expect(compiler.compilationUnit.declarations.any((CompilationUnitMember m) {
       if (m is ClassDeclaration) {

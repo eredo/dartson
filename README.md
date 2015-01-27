@@ -17,7 +17,6 @@ Remove the @MirrorsUsed annotation and the assigned import if it's no longer use
 When using the transformer, mirrors are completely removed when pub build is called.
 
 ### Features not completed yet
-- Support of transformers
 - Support of nested generics (example: ```Map<String,List<MyClass>>```)
 - Support of methods within entities (example: ```String getAName() => "${whatEver}.Name";```)
 - "as" import of dartson within a library separated into parts
@@ -28,17 +27,6 @@ When using the transformer, mirrors are completely removed when pub build is cal
 
 1. All dartson imports "package:dartson/dartson.dart" are rewritten to "package:dartson/dartson_static.dart"
 2. Classes that are annotated using "@Entity" receive 3 methods "dartsonEntityEncode", "dartsonEntityDecode", "newEntity" and implement "StaticEntity"
-3. All dartson method calls "parse", "parseList", "map", "mapList" are rewritten using an instance of the entity
-
-```
-var list = parseList('[{"name":"test"},{"name":"x"}]', MyEntity);
-```
-
-will be changed to:
-
-```
-var list = parseList('[{"name":"test"},{"name":"x"}]', new MyEntity());
-```
 
 ### Known issues:
 
@@ -52,7 +40,7 @@ var list = parseList('[{"name":"test"},{"name":"x"}]', new MyEntity());
 ## Latest changes
 - dartson now supports custom transformer for specific type / an example for a basic DateTime converter can be found in:  
 - transformer support
-
+- TypeTransformer support for dart2js transformer
 
 ## Serializing objects in dart
 
@@ -126,7 +114,7 @@ void main() {
   print(object.notVisible); // > it is
   print(object.setted); // > awesome
   
-  // to parse a list of items use [parseList]
+  // to parse a list of items use [decode] and set the third argument to true
   List<EntityClass> list = dson.decode('[{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}]', new EntityClass(), true);
   print(list.length); // > 2
   print(list[0].name); // > test
@@ -136,7 +124,7 @@ void main() {
 
 ## Mapping Maps and Lists to dart objects
 
-Frameworks like Angular.dart come with several HTTP services which already transform the HTTP response to a map using JSON.encode. To use those encoded Maps or Lists use `map` and `mapList`.
+Frameworks like Angular.dart come with several HTTP services which already transform the HTTP response to a map using JSON.encode. To use those encoded Maps or Lists use `map`.
 
 ```dart
 library example;
@@ -169,7 +157,7 @@ void main() {
   print(object.notVisible); // > it is
   print(object.setted); // > awesome
   
-  // to parse a list of items use [parseList]
+  // to parse a list of items use [map] and set the third argument to true
   List<EntityClass> list = dson.map([{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}], new EntityClass(), true);
   print(list.length); // > 2
   print(list[0].name); // > test
@@ -183,9 +171,8 @@ void main() {
 Transformers are used to encode / decode none serializable types that shouldn't be treated  as objects / lists (for example DateTime).
 
 ```dart
-/**
- * A simple DateTime transformer which uses the toString() method.
- */
+
+/// A simple DateTime transformer which uses the toString() method.
 class DateTimeParser<T> extends TypeTransformer {
   T decode(dynamic value) {
     return DateTime.parse(value);
