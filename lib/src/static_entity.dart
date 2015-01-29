@@ -12,10 +12,10 @@ abstract class TypeTransformerProvider {
 abstract class StaticEntity {
   /// Converts the object into a serializable Map.
   Map dartsonEntityEncode(TypeTransformerProvider dson);
-  
+
   /// Maps the [object] properties on this object.
   void dartsonEntityDecode(Map object, TypeTransformerProvider dson);
-  
+
   /// Initiates a new instance of the same Type. This method is used to
   /// prevent usage of mirrors.
   StaticEntity newEntity();

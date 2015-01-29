@@ -17,7 +17,7 @@ void main() {
   });
 
   CompilationUnitMember simpleClass;
-  
+
   test('should contain the SimpleClass declaration', () {
     expect(compiler.compilationUnit.declarations.any((CompilationUnitMember m) {
       if (m is ClassDeclaration) {
@@ -25,7 +25,7 @@ void main() {
       }
     }), true);
   });
-  
+
   skip_test('should find a SimpleIdentifier prefix for the dartson import', () {
     expect(compiler.findDartsonImportName() != null, true);
     expect(compiler.findDartsonImportName().toString(), 'ddd');
@@ -33,9 +33,11 @@ void main() {
 
   Annotation dartsonEntity;
   test('should show the metadata', () {
-    simpleClass = compiler.compilationUnit.declarations.firstWhere((m)
-      => m is ClassDeclaration && m.name.name == 'SimpleClass');
-    expect(simpleClass.metadata.any((Annotation n) => n.name.name == 'ddd.Entity' ), true);
+    simpleClass = compiler.compilationUnit.declarations.firstWhere(
+        (m) => m is ClassDeclaration && m.name.name == 'SimpleClass');
+    expect(
+        simpleClass.metadata.any((Annotation n) => n.name.name == 'ddd.Entity'),
+        true);
   });
 
   test('the compiler should contain the SimpleClass', () {
@@ -60,7 +62,7 @@ void main() {
     var file = new File('./tmp/simple_class.dart');
     file.writeAsStringSync(code);
   });
-  
+
   test('compile parts', () {
     var compiler = new FileCompiler('./fixture/part1_class.dart');
     var code = compiler.build('package:dartson/test/part1_class.dart');
