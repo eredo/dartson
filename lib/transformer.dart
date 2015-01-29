@@ -18,11 +18,11 @@ import 'package:source_maps/span.dart' show SourceFile;
 const SIMPLE_TYPES = const ['String', 'num', 'bool', 'int', 'List', 'Map'];
 
 // in order to make the code more maintainable we reflect the Entity class to get the simpleName
-var _DARTSON_ENTITY_NAME =
+final _DARTSON_ENTITY_NAME =
     mirrors.MirrorSystem.getName(mirrors.reflectClass(Entity).simpleName);
-var _DARTSON_PROPERTY_NAME =
+final _DARTSON_PROPERTY_NAME =
     mirrors.MirrorSystem.getName(mirrors.reflectClass(Property).simpleName);
-var _DARTSON_STATIC_ENTITY =
+final _DARTSON_STATIC_ENTITY =
     mirrors.MirrorSystem.getName(mirrors.reflectClass(StaticEntity).simpleName);
 
 // method names of the [StaticEntity] interface
@@ -64,18 +64,17 @@ class DartsonTransformer extends Transformer {
 }
 
 class FileCompiler extends _ErrorCollector {
+  final CharSequenceReader reader;
+  final Editor editor;
   Parser parser;
-  CharSequenceReader reader;
   Scanner scanner;
   CompilationUnit compilationUnit;
-  List<ClassDeclaration> _entities = [];
-  Editor editor;
 
   SimpleIdentifier _dartsonPrefix;
   bool _hasEdits = false;
   bool get hasEdits => _hasEdits;
 
-  List<ClassDeclaration> get entities => _entities;
+  final List<ClassDeclaration> entities = <ClassDeclaration>[];
 
   static final _simpleTransformer = new _SimpleTransformWriter();
   static final _entityTransformer = new _EntityTransformWriter();
@@ -86,23 +85,11 @@ class FileCompiler extends _ErrorCollector {
       (_dartsonPrefix != null ? _dartsonPrefix.toString() + '.' : '') +
           _DARTSON_STATIC_ENTITY;
 
-  FileCompiler(String path) {
-    var code = new File(path).readAsStringSync();
+  FileCompiler(String path) : this.fromString(path, new File(path).readAsStringSync());
 
-    editor = new Editor(path, code);
-    reader = new CharSequenceReader(code);
-    scanner = new Scanner(null, reader, this);
-    parser = new Parser(null, this);
-
-    compilationUnit = parser.parseCompilationUnit(scanner.tokenize());
-
-    _dartsonPrefix = findDartsonImportName();
-    _findDartsonEntities();
-  }
-
-  FileCompiler.fromString(String path, String code) {
-    editor = new Editor(path, code);
-    reader = new CharSequenceReader(code);
+  FileCompiler.fromString(String path, String code) :
+    editor = new Editor(path, code),
+    reader = new CharSequenceReader(code) {
     scanner = new Scanner(null, reader, this);
     parser = new Parser(null, this);
 
