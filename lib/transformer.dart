@@ -301,10 +301,10 @@ class FileCompiler extends _ErrorCollector {
   /// Builds the decoding method for the [Entity] annotated class.
   String buildDecodingMethod(List<PropertyDefinition> definitions) {
     var ttp = 'TypeTransformerProvider';
-  if (_dartsonPrefix != null) {
-    ttp = '${_dartsonPrefix}.${ttp}';
-  }
-  
+    if (_dartsonPrefix != null) {
+      ttp = '${_dartsonPrefix}.${ttp}';
+    }
+    
     List<String> resp = ["void ${_DARTSON_DECODE_METHOD}(Map obj, ${ttp} dson) {"];
     resp.addAll(definitions.map((def) {
       if (def.isSimpleType) {
@@ -452,7 +452,7 @@ class _EntityTransformWriter extends _TypeTransformWriter {
         '    ${target}.${definition.name} = dson.getTransformer(${definition.type}).decode(${object}["${definition.serializedName}"]);\n' +
         '  } else {\n' +
         '    ${target}.${definition.name} = new ${definition.type}();\n' +
-        '    ${target}.${definition.name}.${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"], dson);\n'
+        '    (${target}.${definition.name} as StaticEntity).${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"], dson);\n'
         '  }\n' +
         '}' :
         'if (${object} != null) {\n' +
@@ -460,7 +460,7 @@ class _EntityTransformWriter extends _TypeTransformWriter {
         '    ${target} = dson.getTransformer(${definition.type}).decode(${object});\n' +
         '  } else {\n' +
         '    ${target} = new ${definition.type}();\n' +
-        '    ${target}.${_DARTSON_DECODE_METHOD}(${object}, dson);\n' +
+        '    (${target} as StaticEntity).${_DARTSON_DECODE_METHOD}(${object}, dson);\n' +
         '  }\n' +
         '}';
   
@@ -473,14 +473,14 @@ class _EntityTransformWriter extends _TypeTransformWriter {
         '  if (dson.hasTransformer(${definition.type})) {' +
         '    ${object}["${definition.serializedName}"] = dson.getTransformer(${definition.type}).encode(${target}.${definition.name});\n' +
         '  } else {\n' +
-        '    ${object}["${definition.serializedName}"] = ${target}.${definition.name}.${_DARTSON_ENCODE_METHOD}(dson);\n' +
+        '    ${object}["${definition.serializedName}"] = (${target}.${definition.name} as StaticEntity).${_DARTSON_ENCODE_METHOD}(dson);\n' +
         '  }\n' +
         '}' :
         'if (${target} != null) {\n' +
         '  if (dson.hasTransformer(${definition.type})) {' +
         '    ${object} = dson.getTransformer(${definition.type}).encode(${target});\n' +
         '  } else {\n' +
-        '    ${object} = ${target}.${_DARTSON_ENCODE_METHOD}(dson);\n' +
+        '    ${object} = (${target} as StaticEntity).${_DARTSON_ENCODE_METHOD}(dson);\n' +
         '  }\n' +
         '}';
 }

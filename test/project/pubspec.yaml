@@ -9,3 +9,9 @@ dependencies:
   unittest: any
 transformers:
 - dartson
+- $dart2js:
+    checked: true
+    minify: true
+    verbose: true
+    suppressWarnings: false
+    suppressHints: false
