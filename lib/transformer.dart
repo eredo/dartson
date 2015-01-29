@@ -8,7 +8,6 @@ import './dartson.dart';
 import './src/static_entity.dart';
 import 'package:barback/barback.dart';
 import 'package:analyzer/analyzer.dart';
-import 'package:analyzer/src/generated/java_core.dart' show CharSequence;
 import 'package:analyzer/src/generated/ast.dart';
 import 'package:analyzer/src/generated/error.dart';
 import 'package:analyzer/src/generated/parser.dart';
