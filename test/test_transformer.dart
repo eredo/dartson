@@ -31,7 +31,6 @@ void main() {
     expect(compiler.findDartsonImportName().toString(), 'ddd');
   });
 
-  Annotation dartsonEntity;
   test('should show the metadata', () {
     simpleClass = compiler.compilationUnit.declarations.firstWhere(
         (m) => m is ClassDeclaration && m.name.name == 'SimpleClass');

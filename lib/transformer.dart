@@ -371,11 +371,6 @@ class DartsonMethodVisitor<R> extends AstVisitor<R> {
   }
 }
 
-/// Checks if a type is serializable by default.
-bool _isSimpleType(String type) {
-  return SIMPLE_TYPES.contains(type);
-}
-
 class Editor {
   SourceFile sourceFile;
   TextEditTransaction editor;
