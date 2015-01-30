@@ -15,7 +15,7 @@ var _qn = (Type t) => _getName(reflectClass(t).qualifiedName);
 final _defaultSimpleTransformer = new _SimpleTypeTransformer();
 
 /// These are dart.core.* Types that can be be used as they are.
-final Map<String,TypeTransformer> _simpleTransformers = {
+final Map<String, TypeTransformer> _simpleTransformers = {
   _qn(String): _defaultSimpleTransformer,
   _qn(num): _defaultSimpleTransformer,
   _qn(int): _defaultSimpleTransformer,

@@ -4,11 +4,7 @@ import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
 import 'package:unittest/unittest.dart';
 
-
-@MirrorsUsed(targets: const[
-  'test_dartson'
-  ],
-  override: '*')
+@MirrorsUsed(targets: const ['test_dartson'], override: '*')
 import 'dart:mirrors';
 
 void main() {
@@ -20,10 +16,10 @@ void main() {
   });
 
   test('serialize: mixed nested arrays', () {
-    String str = dson.encode([[1,2,3],[3,4,5]]);
+    String str = dson.encode([[1, 2, 3], [3, 4, 5]]);
     expect(str, '[[1,2,3],[3,4,5]]');
 
-    str = dson.encode(["test1", ["a","b"], [1,2], 3]);
+    str = dson.encode(["test1", ["a", "b"], [1, 2], 3]);
     expect(str, '["test1",["a","b"],[1,2],3]');
   });
 
@@ -36,25 +32,21 @@ void main() {
 
   test('serialize: mixed nested map', () {
     Map map = {
-      "itsAmap": {
-        "key1": 1,
-        "key2": "val"
-      },
-      "itsAarray": [1,2,3],
+      "itsAmap": {"key1": 1, "key2": "val"},
+      "itsAarray": [1, 2, 3],
       "keyk": "valo"
     };
 
     String str = dson.encode(map);
-    expect(str, '{"itsAmap":{"key1":1,"key2":"val"},"itsAarray":[1,2,3],"keyk":"valo"}');
+    expect(str,
+        '{"itsAmap":{"key1":1,"key2":"val"},"itsAarray":[1,2,3],"keyk":"valo"}');
   });
-  
+
   test('serialize: simple object', () {
-    var obj = {
-      "test": "test"
-    };
+    var obj = {"test": "test"};
     JustObject test = new JustObject();
     test.object = obj;
-    
+
     expect(dson.encode(test), '{"object":{"test":"test"}}');
   });
 
@@ -62,16 +54,16 @@ void main() {
     var test = new TestClass1();
     test.name = "test1";
     String str = dson.encode(test);
-    expect(str,'{"name":"test1"}');
+    expect(str, '{"name":"test1"}');
   });
-  
+
   test('serialize: ignore in object', () {
     var test = new TestClass1();
     test.name = "test";
     test.ignored = true;
     expect(dson.encode(test), '{"name":"test"}');
   });
-  
+
   test('serialize: renamed property of object', () {
     var test = new TestClass1();
     test.renamed = "test";
@@ -83,12 +75,15 @@ void main() {
   });
 
   test('serialize: nested class', () {
-    expect(dson.encode(new NestedClass("test", [1,2,3], new TestGetter("get it"))),
-      '{"name":"test","list":[1,2,3],"getter":{"name":"get it"}}');
+    expect(dson.encode(
+            new NestedClass("test", [1, 2, 3], new TestGetter("get it"))),
+        '{"name":"test","list":[1,2,3],"getter":{"name":"get it"}}');
   });
 
   test('parse: parser simple', () {
-    TestClass1 test = dson.decode('{"name":"test","matter":true,"intNumber":2,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}', new TestClass1());
+    TestClass1 test = dson.decode(
+        '{"name":"test","matter":true,"intNumber":2,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}',
+        new TestClass1());
     expect(test.name, 'test');
     expect(test.matter, true);
     expect(test.intNumber, 2);
@@ -98,72 +93,79 @@ void main() {
     expect(test.map["k"], "o");
     expect(test.renamed, "test");
   });
-  
+
   test('parse: no constructor found', () {
     NoConstructorError err;
     try {
-      NestedParent test = dson.decode('{"child": {"name":"failure"}}', new NestedParent());
-    } catch(ex) {
+      NestedParent test =
+          dson.decode('{"child": {"name":"failure"}}', new NestedParent());
+    } catch (ex) {
       err = ex;
     }
-    
+
     expect(err != null, true);
     expect(err is NoConstructorError, true);
   });
-  
+
   test('parse: nested parsing', () {
-    TestClass1 test = dson.decode('{"name":"parent","child":{"name":"child"}}', new TestClass1());
+    TestClass1 test = dson.decode(
+        '{"name":"parent","child":{"name":"child"}}', new TestClass1());
     expect(test.child.name, "child");
   });
-  
+
   test('parse: using setter', () {
     TestSetter test = dson.decode('{"name":"test"}', new TestSetter());
     expect(test.name, 'test');
   });
-  
+
   test('parse: generics list', () {
-    ListClass test = dson.decode('{"list": [{"name": "test1"}, {"name": "test2"}]}', new ListClass());
-    
+    ListClass test = dson.decode(
+        '{"list": [{"name": "test1"}, {"name": "test2"}]}', new ListClass());
+
     expect(test.list[0].name, 'test1');
     expect(test.list[1].name, 'test2');
   });
-  
+
   test('parse: simple list', () {
     SimpleList list = dson.decode('{"list":[1,2,3]}', new SimpleList());
     expect(list.list[0], 1);
   });
-  
-  test('parse: generic map', () {
-    MapClass test = dson.decode('{"map": {"test": {"name": "test"}, "test2": {"name": "test2"}}}', new MapClass());
 
-    expect(test.map["test"].name, "test");    
+  test('parse: generic map', () {
+    MapClass test = dson.decode(
+        '{"map": {"test": {"name": "test"}, "test2": {"name": "test2"}}}',
+        new MapClass());
+
+    expect(test.map["test"].name, "test");
     expect(test.map["test2"].name, "test2");
   });
-  
-  test('parse: simple map', () {
-    SimpleMap test = dson.decode('{"map": {"test": "test", "test2": "test2"}}', new SimpleMap());
 
-    expect(test.map["test"], "test");    
+  test('parse: simple map', () {
+    SimpleMap test = dson.decode(
+        '{"map": {"test": "test", "test2": "test2"}}', new SimpleMap());
+
+    expect(test.map["test"], "test");
     expect(test.map["test2"], "test2");
   });
-  
-  test('parse: simple map with type declaration', () {
-    SimpleMapString test = dson.decode('{"map": {"test": 1, "test2": 2}}', new SimpleMapString());
 
-    expect(test.map["test"], 1);    
+  test('parse: simple map with type declaration', () {
+    SimpleMapString test =
+        dson.decode('{"map": {"test": 1, "test2": 2}}', new SimpleMapString());
+
+    expect(test.map["test"], 1);
     expect(test.map["test2"], 2);
   });
-  
+
   test('parse: list of simple class', () {
-    List<SimpleClass> test = dson.decode('[{"name":"test"},{"name":"test2"}]', new SimpleClass(), true);
+    List<SimpleClass> test = dson.decode(
+        '[{"name":"test"},{"name":"test2"}]', new SimpleClass(), true);
     expect(test[0].name, "test");
     expect(test[1].name, "test2");
   });
 
   test('map: parse object', () {
-    SimpleMapString test = dson.map({
-      "map": {"test": 1, "test2": 2}
-    }, new SimpleMapString());
+    SimpleMapString test =
+        dson.map({"map": {"test": 1, "test2": 2}}, new SimpleMapString());
 
     expect(test.map["test"], 1);
     expect(test.map["test2"], 2);
@@ -171,8 +173,9 @@ void main() {
 
   test('mapList: parse list', () {
     List<SimpleMapString> test = dson.map([
-       {"map": {"test": 1, "test2": 2}},
-       {"map": {"test": 3, "test2": 4}}], new SimpleMapString(), true);
+      {"map": {"test": 1, "test2": 2}},
+      {"map": {"test": 3, "test2": 4}}
+    ], new SimpleMapString(), true);
     expect(test[0].map["test"], 1);
     expect(test[0].map["test2"], 2);
     expect(test[1].map["test"], 3);
@@ -186,7 +189,8 @@ void main() {
 
   test('parse: DateTime', () {
     var date = new DateTime.now();
-    var ctg = dson.decode('{"testDate":"${date.toString()}"}', new SimpleDateContainer());
+    var ctg = dson.decode(
+        '{"testDate":"${date.toString()}"}', new SimpleDateContainer());
     expect(ctg.testDate is DateTime, true);
     expect(ctg.testDate == date, true);
   });
@@ -199,12 +203,12 @@ void main() {
   });
 }
 
-class SimpleTransformer<T> extends TypeTransformer {
-  T decode(dynamic value) {
+class SimpleTransformer extends TypeTransformer<DateTime> {
+  DateTime decode(dynamic value) {
     return DateTime.parse(value);
   }
 
-  dynamic encode(T value) {
+  dynamic encode(DateTime value) {
     return value.toString();
   }
 }
@@ -221,11 +225,11 @@ class TestClass1 {
   Map map;
   TestClass1 child;
   int intNumber;
-  
-  @Property(ignore:true)
+
+  @Property(ignore: true)
   bool ignored;
-  
-  @Property(name:"the_renamed")
+
+  @Property(name: "the_renamed")
   String renamed;
 
   TestClass1();
@@ -245,7 +249,7 @@ class TestGetter {
 
 class TestSetter {
   String _name;
-  
+
   String get name => _name;
   set name(String n) => _name = n;
 }
@@ -264,7 +268,7 @@ class NestedParent {
 
 class SimpleClass {
   String name;
-  
+
   String toString() => "SimpleClass: name: ${name}";
 }
 
@@ -285,6 +289,5 @@ class SimpleMap {
 }
 
 class SimpleMapString {
-  Map<String,num> map;
+  Map<String, num> map;
 }
-

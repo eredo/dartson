@@ -1,8 +1,7 @@
 *.js
 *.js.*
 .settings
-packages/
-test/packages/
+packages
 .project
 pubspec.lock
 *.DS_Store
@@ -10,3 +9,4 @@ pubspec.lock
 .idea
 doc-viewer/
 test/tmp/
+.pub

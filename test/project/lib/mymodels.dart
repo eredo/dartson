@@ -6,15 +6,15 @@ import 'package:dartson/dartson.dart';
 class Model {
   String name;
   bool wrong;
-  
+
   @Property(ignore: true)
   int ignored;
-  
+
   @Property(name: "other")
   String renamed;
-  
+
   List<ModelChild> children;
-  
+
   DateTime created;
 }
 
