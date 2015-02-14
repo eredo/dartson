@@ -114,10 +114,12 @@ class FileCompiler extends _ErrorCollector {
   /// Checks all class declarations for the [Entity] annotation. Each
   /// declaration will be added to the [_entities] list.
   void _findDartsonEntities() {
-    entities.addAll(compilationUnit.declarations.where(
-        (m) => m is ClassDeclaration &&
+    entities.addAll(compilationUnit.declarations
+        .where((m) => m is ClassDeclaration &&
             m.metadata
-                .any((n) => _isDartsonAnnotation(n, _DARTSON_ENTITY_NAME))));
+                .any((n) => _isDartsonAnnotation(n, _DARTSON_ENTITY_NAME)))
+        // Erasing the type of the returned where iterable to allow checked-mode
+        .map((cd) => cd));
 
     if (entities.length > 0) {
       _hasEdits = true;
