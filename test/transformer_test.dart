@@ -4,14 +4,16 @@ import 'dart:io';
 
 import '../lib/transformer.dart';
 
-import 'package:unittest/unittest.dart';
 import 'package:analyzer/src/generated/ast.dart';
+import 'package:path/path.dart' as p;
+import 'package:unittest/unittest.dart';
+
+String get _testDirPath => p.dirname(p.fromUri(Platform.script));
 
 void main() {
-  DartsonTransformer transformer = new DartsonTransformer();
-
   // test the compiler
-  FileCompiler compiler = new FileCompiler('./fixture/simple_class.dart');
+  var simplePath = p.join(_testDirPath, 'fixture/simple_class.dart');
+  FileCompiler compiler = new FileCompiler(simplePath);
   test('read source code from file', () {
     expect(compiler.compilationUnit.declarations is NodeList, true);
   });
@@ -56,16 +58,19 @@ void main() {
     expect(entityMap[5].typeArguments[1], 'ChildClass');
   });
 
-  test('build code', () {
-    var code = compiler.build('package:dartson/test/simple_class.dart');
-    var file = new File('./tmp/simple_class.dart');
-    file.writeAsStringSync(code);
-  });
+  // TODO: validate code output
+  // TODO: delete temp directory when complete
+  test('build and compile code', () {
+    var tempDir = Directory.systemTemp.createTempSync('dartson_');
+    print('Generating code into: ${tempDir.path}');
 
-  test('compile parts', () {
-    var compiler = new FileCompiler('./fixture/part1_class.dart');
-    var code = compiler.build('package:dartson/test/part1_class.dart');
-    var file = new File('./tmp/part1_class.dart');
+    var code = compiler.build('package:dartson/test/simple_class.dart');
+    var file = new File(p.join(tempDir.path, 'simple_class.dart'));
     file.writeAsStringSync(code);
+
+    var newCompiler = new FileCompiler(p.join(_testDirPath, 'fixture/part1_class.dart'));
+    var newCode = newCompiler.build('package:dartson/test/part1_class.dart');
+    var newFile = new File(p.join(tempDir.path, 'part1_class.dart'));
+    newFile.writeAsStringSync(newCode);
   });
 }
