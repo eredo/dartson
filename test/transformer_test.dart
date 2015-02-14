@@ -68,7 +68,8 @@ void main() {
     var file = new File(p.join(tempDir.path, 'simple_class.dart'));
     file.writeAsStringSync(code);
 
-    var newCompiler = new FileCompiler(p.join(_testDirPath, 'fixture/part1_class.dart'));
+    var newCompiler =
+        new FileCompiler(p.join(_testDirPath, 'fixture/part1_class.dart'));
     var newCode = newCompiler.build('package:dartson/test/part1_class.dart');
     var newFile = new File(p.join(tempDir.path, 'part1_class.dart'));
     newFile.writeAsStringSync(newCode);
