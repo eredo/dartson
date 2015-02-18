@@ -11,4 +11,5 @@ dependencies:
   logging: ">=0.9.3 <0.10.0"
   source_maps: "0.9.3"
 dev_dependencies:
+  path: any
   unittest: any

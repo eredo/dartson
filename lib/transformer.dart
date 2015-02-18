@@ -85,11 +85,12 @@ class FileCompiler extends _ErrorCollector {
       (_dartsonPrefix != null ? _dartsonPrefix.toString() + '.' : '') +
           _DARTSON_STATIC_ENTITY;
 
-  FileCompiler(String path) : this.fromString(path, new File(path).readAsStringSync());
+  FileCompiler(String path)
+      : this.fromString(path, new File(path).readAsStringSync());
 
-  FileCompiler.fromString(String path, String code) :
-    editor = new Editor(path, code),
-    reader = new CharSequenceReader(code) {
+  FileCompiler.fromString(String path, String code)
+      : editor = new Editor(path, code),
+        reader = new CharSequenceReader(code) {
     scanner = new Scanner(null, reader, this);
     parser = new Parser(null, this);
 
@@ -113,10 +114,12 @@ class FileCompiler extends _ErrorCollector {
   /// Checks all class declarations for the [Entity] annotation. Each
   /// declaration will be added to the [_entities] list.
   void _findDartsonEntities() {
-    entities.addAll(compilationUnit.declarations.where(
-        (m) => m is ClassDeclaration &&
+    entities.addAll(compilationUnit.declarations
+        .where((m) => m is ClassDeclaration &&
             m.metadata
-                .any((n) => _isDartsonAnnotation(n, _DARTSON_ENTITY_NAME))));
+                .any((n) => _isDartsonAnnotation(n, _DARTSON_ENTITY_NAME)))
+        // Erasing the type of the returned where iterable to allow checked-mode
+        .map((cd) => cd));
 
     if (entities.length > 0) {
       _hasEdits = true;
@@ -418,22 +421,22 @@ class _SimpleTransformWriter extends _TypeTransformWriter {
   @override
   String decode(String target, String object,
       [PropertyDefinition definition]) => definition != null
-          ? '${target}.${definition.name} = ${object}["${definition.serializedName}"];'
-          : '${target} = ${object};';
+      ? '${target}.${definition.name} = ${object}["${definition.serializedName}"];'
+      : '${target} = ${object};';
 
   @override
   String encode(String target, String object,
       [PropertyDefinition definition]) => definition != null
-          ? '${object}["${definition.serializedName}"] = ${target}.${definition.name};'
-          : '${object} = ${target};';
+      ? '${object}["${definition.serializedName}"] = ${target}.${definition.name};'
+      : '${object} = ${target};';
 }
 
 /// A transform writer that initiates an entity by it's constructor and than
 /// calls the fromJson or toJson method.
 class _EntityTransformWriter extends _TypeTransformWriter {
   @override
-  String decode(String target, String object, [PropertyDefinition definition]) => definition ==
-          null
+  String decode(String target, String object,
+      [PropertyDefinition definition]) => definition == null
       ? throw 'Unable to decode Entity without a definition.'
       : definition.name != null
           ? 'if (${object}["${definition.serializedName}"] != null) {\n' +
@@ -453,8 +456,8 @@ class _EntityTransformWriter extends _TypeTransformWriter {
               '}';
 
   @override
-  String encode(String target, String object, [PropertyDefinition definition]) => definition ==
-          null
+  String encode(String target, String object,
+      [PropertyDefinition definition]) => definition == null
       ? throw 'Unable to encode Entity without a definition.'
       : definition.name != null
           ? 'if (${target}.${definition.name} != null) {\n' +
