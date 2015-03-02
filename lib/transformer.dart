@@ -13,7 +13,7 @@ import 'package:analyzer/src/generated/error.dart';
 import 'package:analyzer/src/generated/parser.dart';
 import 'package:analyzer/src/generated/scanner.dart';
 import 'package:source_maps/refactor.dart';
-import 'package:source_maps/span.dart' show SourceFile;
+import 'package:source_span/source_span.dart' show SourceFile;
 
 const SIMPLE_TYPES = const ['String', 'num', 'bool', 'int', 'List', 'Map'];
 
@@ -366,7 +366,7 @@ class Editor {
   TextEditTransaction editor;
 
   Editor(String path, String code) {
-    sourceFile = new SourceFile.text(path, code);
+    sourceFile = new SourceFile(code, url: path);
     editor = new TextEditTransaction(code, sourceFile);
   }
 }
