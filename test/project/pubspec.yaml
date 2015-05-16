@@ -6,7 +6,7 @@ dependencies:
   browser: any
   dartson:
     path: ../../
-  unittest: any
+  test: any
 transformers:
 - dartson
 - $dart2js:
