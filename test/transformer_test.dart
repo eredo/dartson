@@ -28,10 +28,10 @@ void main() {
     }), true);
   });
 
-  skip_test('should find a SimpleIdentifier prefix for the dartson import', () {
+  test('should find a SimpleIdentifier prefix for the dartson import', () {
     expect(compiler.findDartsonImportName() != null, true);
     expect(compiler.findDartsonImportName().toString(), 'ddd');
-  });
+  }, skip: true);
 
   test('should show the metadata', () {
     simpleClass = compiler.compilationUnit.declarations.firstWhere(

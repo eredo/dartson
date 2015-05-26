@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.3 (5/25/2015)
+- Updated analyzer and test dependency (thanks to @rightisleft)
+
 ## 0.2.1 (2/10/2015)
 - Changed the default DateTime serialized format to ISO 8601 with Z notation.
 
