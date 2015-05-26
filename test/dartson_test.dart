@@ -2,7 +2,7 @@ library test_dartson;
 
 import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 @MirrorsUsed(targets: const ['test_dartson'], override: '*')
 import 'dart:mirrors';
