@@ -74,4 +74,15 @@ void main() {
     var newFile = new File(p.join(tempDir.path, 'part1_class.dart'));
     newFile.writeAsStringSync(newCode);
   });
+
+  test('build and compile code for circular referenced model', () {
+    var tempDir = Directory.systemTemp.createTempSync('dartson_');
+    print('Generating code into: ${tempDir.path}');
+
+    var newCompiler =
+        new FileCompiler(p.join(_testDirPath, 'fixture/circular_referenced_model.dart'));
+    var newCode = newCompiler.build('package:dartson/test/circular_referenced_model.dart');
+    var newFile = new File(p.join(tempDir.path, 'circular_referenced_model.dart'));
+    newFile.writeAsStringSync(newCode);
+  });
 }

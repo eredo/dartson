@@ -2,6 +2,7 @@ library test_dartson;
 
 import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
+import './reference_aware_test.dart';
 import 'package:test/test.dart';
 
 @MirrorsUsed(targets: const ['test_dartson'], override: '*')
@@ -200,6 +201,11 @@ void main() {
     obj.testDate = new DateTime.now();
     var str = dson.encode(obj);
     expect(str, '{"testDate":"${obj.testDate.toString()}"}');
+  });
+
+
+  test('reference aware', () {
+    testSerializeAndDeserializeReferenceAware(dson);
   });
 }
 

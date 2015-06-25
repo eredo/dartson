@@ -207,3 +207,108 @@ void main() {
   dson.addTransformer(new DateTimeParser(), DateTime);
 }
 ```
+
+## Serialize (circular) references
+
+Use ```String jsonString = dson.encodeReferenceAware(object);``` instead of ```String jsonString = dson.encode(object);``` to serialize object graphs. The object graph may include circular references. Use ```dson.decodeReferenceAware(json, object)``` to deserialize.
+
+Note: Lists and Maps will not be serialized reference aware!
+
+References to already serialized objects will be represented by an placeholder (map): ```{ "__reference#__": <id> }```. To referenced objects an identifier will be added to the serializable map (json): ```"__instance#__": <id>```. See sample below.
+
+
+Sample:
+
+```
+library example;
+
+import 'package:dartson/dartson.dart' as ds;
+
+@ds.Entity()
+class PersonStore {
+  List<Person> persons;
+  List<Tag> tags;
+}
+
+@ds.Entity()
+class Person {
+  int id;
+  String name;
+  Person parent;
+}
+
+@ds.Entity()
+class Tag {
+  int id;
+  String name;
+  List<Person> persons;
+}
+
+void main() {
+  var dson = new ds.Dartson.JSON();
+
+  var p1 = new Person()
+      ..id = 1
+      ..name = 'Yin';
+  var p2 = new Person()
+      ..id = 2
+      ..name = 'Yang'
+      ..parent = p1;
+  p1.parent = p2; // circular reference
+
+  var t1 = new Tag()
+      ..id = 1
+      ..name = 'Test'
+      ..persons = [p1, p2];
+
+  var store = new PersonStore()
+      ..persons = [p1, p2]
+      ..tags = [t1];
+
+  // serialize:
+  var json = dson.encodeReferenceAware(store);
+  
+/* will return:
+{  
+  "persons":[  
+    {  
+      "id":1,
+      "name":"Yin",
+      "__instance#__":1,
+      "parent":{  
+        "id":2,
+        "name":"Yang",
+        "parent":{  
+          "__reference#__":1
+        },
+        "__instance#__":2
+      }
+    },
+    {  
+      "__reference#__":2
+    }
+  ],
+  "tags":[  
+    {  
+      "id":1,
+      "name":"Test",
+      "persons":[  
+        {  
+          "__reference#__":1
+        },
+        {  
+          "__reference#__":2
+        }
+      ]
+    }
+  ]
+}
+*/
+
+	// deserialize:
+	var deserialized = dson.decodeReferenceAware(json, new PersonStore());
+}
+```
+
+
+

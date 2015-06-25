@@ -272,23 +272,25 @@ class FileCompiler extends _ErrorCollector {
 
   /// Builds the encoding method for the [Entity] annotated class.
   String buildEncodingMethod(List<PropertyDefinition> definitions) {
-    var ttp = 'TypeTransformerProvider';
-    if (_dartsonPrefix != null) {
-      ttp = '${_dartsonPrefix}.${ttp}';
-    }
+    var encoderType = typeNameOptionalPrefixed(_dartsonPrefix, 'StaticEntityEncoder');
 
-    List<String> resp = ['Map ${_DARTSON_ENCODE_METHOD}(${ttp} dson) {'];
+    List<String> resp = ['Map ${_DARTSON_ENCODE_METHOD}(${encoderType} dson) {'];
+    resp.add('if (dson.isSerialized(this)) {');
+    resp.add('return dson.createSerializablePlaceholder(this);');
+    resp.add('}');
+
     resp.add('var obj = {};');
+    resp.add('dson.registerSerializableMap(this, obj);');
 
     resp.addAll(definitions.map((def) {
       if (def.isSimpleType) {
-        return _simpleTransformer.encode('this', 'obj', def);
+        return _simpleTransformer.encode(_dartsonPrefix, 'this', 'obj', def);
       } else if (def.isMap) {
-        return _mapTransformer.encode('this', 'obj', def);
+        return _mapTransformer.encode(_dartsonPrefix, 'this', 'obj', def);
       } else if (def.isList) {
-        return _listTransformer.encode('this', 'obj', def);
+        return _listTransformer.encode(_dartsonPrefix, 'this', 'obj', def);
       } else {
-        return _entityTransformer.encode('this', 'obj', def);
+        return _entityTransformer.encode(_dartsonPrefix, 'this', 'obj', def);
       }
     }));
 
@@ -300,23 +302,21 @@ class FileCompiler extends _ErrorCollector {
 
   /// Builds the decoding method for the [Entity] annotated class.
   String buildDecodingMethod(List<PropertyDefinition> definitions) {
-    var ttp = 'TypeTransformerProvider';
-    if (_dartsonPrefix != null) {
-      ttp = '${_dartsonPrefix}.${ttp}';
-    }
+    var decoderType = typeNameOptionalPrefixed(_dartsonPrefix, 'StaticEntityDecoder');
 
     List<String> resp = [
-      "void ${_DARTSON_DECODE_METHOD}(Map obj, ${ttp} dson) {"
+      "void ${_DARTSON_DECODE_METHOD}(Map obj, ${decoderType} dson) {",
+      "dson.registerInstanceIfApplicable(this, obj);"
     ];
     resp.addAll(definitions.map((def) {
       if (def.isSimpleType) {
-        return _simpleTransformer.decode('this', 'obj', def);
+        return _simpleTransformer.decode(_dartsonPrefix, 'this', 'obj', def);
       } else if (def.isMap) {
-        return _mapTransformer.decode('this', 'obj', def);
+        return _mapTransformer.decode(_dartsonPrefix, 'this', 'obj', def);
       } else if (def.isList) {
-        return _listTransformer.decode('this', 'obj', def);
+        return _listTransformer.decode(_dartsonPrefix, 'this', 'obj', def);
       } else {
-        return _entityTransformer.decode('this', 'obj', def);
+        return _entityTransformer.decode(_dartsonPrefix, 'this', 'obj', def);
       }
     }));
     resp.add("}");
@@ -326,6 +326,10 @@ class FileCompiler extends _ErrorCollector {
 
   String _buildNewEntityMethod(ClassDeclaration entity) =>
       '${entity.name.toString()} newEntity() => new ${entity.name.toString()}();';
+}
+
+String typeNameOptionalPrefixed(SimpleIdentifier dartsonPrefix, String type) {
+  return dartsonPrefix == null ? type : '${dartsonPrefix}.${type}';
 }
 
 /// The visitor checks for dartson calls like fill, parse and then replaces the Type
@@ -409,23 +413,23 @@ abstract class _TypeTransformWriter {
 
   /// Generates the code snippet to add the values / [key]s of an object member
   /// [property] to the [target] json map.
-  String encode(String target, String object, [PropertyDefinition definition]);
+  String encode(SimpleIdentifier dartsonPrefix, String target, String object, [PropertyDefinition definition]);
 
   /// Generates the code snippet to add the values of a json map to the object.
-  String decode(String target, String object, [PropertyDefinition definition]);
+  String decode(SimpleIdentifier dartsonPrefix, String target, String object, [PropertyDefinition definition]);
 }
 
 /// A simple transform writer which just puts the value into the property and the
 /// other way around.
 class _SimpleTransformWriter extends _TypeTransformWriter {
   @override
-  String decode(String target, String object,
+  String decode(SimpleIdentifier dartsonPrefix, String target, String object,
       [PropertyDefinition definition]) => definition != null
       ? '${target}.${definition.name} = ${object}["${definition.serializedName}"];'
       : '${target} = ${object};';
 
   @override
-  String encode(String target, String object,
+  String encode(SimpleIdentifier dartsonPrefix, String target, String object,
       [PropertyDefinition definition]) => definition != null
       ? '${object}["${definition.serializedName}"] = ${target}.${definition.name};'
       : '${object} = ${target};';
@@ -435,43 +439,55 @@ class _SimpleTransformWriter extends _TypeTransformWriter {
 /// calls the fromJson or toJson method.
 class _EntityTransformWriter extends _TypeTransformWriter {
   @override
-  String decode(String target, String object,
+  String decode(SimpleIdentifier dartsonPrefix, String target, String object,
       [PropertyDefinition definition]) => definition == null
       ? throw 'Unable to decode Entity without a definition.'
       : definition.name != null
           ? 'if (${object}["${definition.serializedName}"] != null) {\n' +
-              '  if (dson.hasTransformer(${definition.type})) {' +
+              '  if (dson.isPlaceholder(${object}["${definition.serializedName}"])) {\n' +
+              '    ${target}.${definition.name} = dson.resolveReferenceForPlaceholder(${object}["${definition.serializedName}"]);\n' +
+              '  } else if (dson.hasTransformer(${definition.type})) {\n' +
               '    ${target}.${definition.name} = dson.getTransformer(${definition.type}).decode(${object}["${definition.serializedName}"]);\n' +
               '  } else {\n' +
               '    ${target}.${definition.name} = new ${definition.type}();\n' +
-              '    (${target}.${definition.name} as StaticEntity).${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"], dson);\n'
+              '    (${target}.${definition.name} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"], dson);\n'
               '  }\n' + '}'
           : 'if (${object} != null) {\n' +
-              '  if (dson.hasTransformer(${definition.type})) {' +
+              '  if (dson.isPlaceholder(${object})) {\n' +
+              '    ${target} = dson.resolveReferenceForPlaceholder(${object});\n' +
+              '  } else if (dson.hasTransformer(${definition.type})) {\n' +
               '    ${target} = dson.getTransformer(${definition.type}).decode(${object});\n' +
               '  } else {\n' +
               '    ${target} = new ${definition.type}();\n' +
-              '    (${target} as StaticEntity).${_DARTSON_DECODE_METHOD}(${object}, dson);\n' +
+              '    (${target} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_DECODE_METHOD}(${object}, dson);\n' +
               '  }\n' +
               '}';
 
   @override
-  String encode(String target, String object,
+  String encode(SimpleIdentifier dartsonPrefix, String target, String object,
       [PropertyDefinition definition]) => definition == null
       ? throw 'Unable to encode Entity without a definition.'
       : definition.name != null
           ? 'if (${target}.${definition.name} != null) {\n' +
-              '  if (dson.hasTransformer(${definition.type})) {' +
-              '    ${object}["${definition.serializedName}"] = dson.getTransformer(${definition.type}).encode(${target}.${definition.name});\n' +
+              '  if (dson.isSerialized(${target}.${definition.name})) {\n' +
+              '    ${object}["${definition.serializedName}"] = dson.createSerializablePlaceholder(${target}.${definition.name});\n' +
+              '  } else if (dson.hasTransformer(${definition.type})) {\n' +
+              '    var encoded = dson.getTransformer(${definition.type}).encode(${target}.${definition.name});\n' +
+              '    dson.registerSerializableMap(${target}.${definition.name}, encoded);\n' +
+              '    ${object}["${definition.serializedName}"] = encoded;\n' +
               '  } else {\n' +
-              '    ${object}["${definition.serializedName}"] = (${target}.${definition.name} as StaticEntity).${_DARTSON_ENCODE_METHOD}(dson);\n' +
+              '    ${object}["${definition.serializedName}"] = (${target}.${definition.name} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_ENCODE_METHOD}(dson);\n' +
               '  }\n' +
               '}'
           : 'if (${target} != null) {\n' +
-              '  if (dson.hasTransformer(${definition.type})) {' +
-              '    ${object} = dson.getTransformer(${definition.type}).encode(${target});\n' +
+              '  if (dson.isSerialized(${target})) {\n' +
+              '    ${object} = dson.createSerializablePlaceholder(${target});\n' +
+              '  } else if (dson.hasTransformer(${definition.type})) {\n' +
+              '    var encoded = dson.getTransformer(${definition.type}).encode(${target});\n' +
+              '    dson.registerSerializableMap(this, encoded);\n' +
+              '    ${object} = encoded;\n' +
               '  } else {\n' +
-              '    ${object} = (${target} as StaticEntity).${_DARTSON_ENCODE_METHOD}(dson);\n' +
+              '    ${object} = (${target} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_ENCODE_METHOD}(dson);\n' +
               '  }\n' +
               '}';
 }
@@ -483,7 +499,7 @@ class _MapTransformWriter extends _TypeTransformWriter {
   static final _entityTransformer = new _EntityTransformWriter();
 
   @override
-  String decode(String target, String object, [PropertyDefinition definition]) {
+  String decode(SimpleIdentifier dartsonPrefix, String target, String object, [PropertyDefinition definition]) {
     var resp = [
       'if (${object}["${definition.serializedName}"] != null) {',
       '  ${target}.${definition.name} = new Map();',
@@ -499,10 +515,10 @@ class _MapTransformWriter extends _TypeTransformWriter {
     }
 
     if (SIMPLE_TYPES.contains(definition.typeArguments[1])) {
-      resp.add(_simpleTransformer.decode(
+      resp.add(_simpleTransformer.decode(dartsonPrefix,
           '${target}.${definition.name}[keyVal]', 'val'));
     } else {
-      resp.add(_entityTransformer.decode('${target}.${definition.name}[keyVal]',
+      resp.add(_entityTransformer.decode(dartsonPrefix, '${target}.${definition.name}[keyVal]',
           'val', new PropertyDefinition(
               definition.typeArguments[1], null, null, null)));
     }
@@ -514,7 +530,7 @@ class _MapTransformWriter extends _TypeTransformWriter {
   }
 
   @override
-  String encode(String target, String object, [PropertyDefinition definition]) {
+  String encode(SimpleIdentifier dartsonPrefix, String target, String object, [PropertyDefinition definition]) {
     if (definition ==
         null) throw 'Unable to decode Map without arguments. Use SimpleTransformWriter instead.';
 
@@ -525,12 +541,12 @@ class _MapTransformWriter extends _TypeTransformWriter {
     ];
 
     if (SIMPLE_TYPES.contains(definition.typeArguments[1])) {
-      resp.add(_simpleTransformer.encode(
+      resp.add(_simpleTransformer.encode(dartsonPrefix,
           'val', '${object}["${definition.serializedName}"][key]'));
 
       // TODO: Add nested generics support
     } else {
-      resp.add(_entityTransformer.encode('val',
+      resp.add(_entityTransformer.encode(dartsonPrefix, 'val',
           '${object}["${definition.serializedName}"][key]',
           new PropertyDefinition(
               definition.typeArguments[1], null, null, null)));
@@ -547,7 +563,7 @@ class _ListTransformWriter extends _TypeTransformWriter {
   static final _entityTransformer = new _EntityTransformWriter();
 
   @override
-  String decode(String target, String object, [PropertyDefinition definition]) {
+  String decode(SimpleIdentifier dartsonPrefix, String target, String object, [PropertyDefinition definition]) {
     if (definition ==
         null) throw 'Unable to decode List without arguments. Use SimpleTransformWriter instead.';
 
@@ -559,9 +575,9 @@ class _ListTransformWriter extends _TypeTransformWriter {
     ];
 
     if (SIMPLE_TYPES.contains(definition.typeArguments[0])) {
-      resp.add(_simpleTransformer.decode('el', 'val'));
+      resp.add(_simpleTransformer.decode(dartsonPrefix, 'el', 'val'));
     } else {
-      resp.add(_entityTransformer.decode('el', 'val', new PropertyDefinition(
+      resp.add(_entityTransformer.decode(dartsonPrefix, 'el', 'val', new PropertyDefinition(
           definition.typeArguments[0], null, null, null)));
     }
     resp.add('    ${target}.${definition.name}.add(el);');
@@ -571,7 +587,7 @@ class _ListTransformWriter extends _TypeTransformWriter {
   }
 
   @override
-  String encode(String target, String object, [PropertyDefinition definition]) {
+  String encode(SimpleIdentifier dartsonPrefix, String target, String object, [PropertyDefinition definition]) {
     if (definition ==
         null) throw 'Unable to encode List without arguments. Use SimpleTransformWriter instead.';
 
@@ -583,11 +599,11 @@ class _ListTransformWriter extends _TypeTransformWriter {
     ];
 
     if (SIMPLE_TYPES.contains(definition.typeArguments[0])) {
-      resp.add(_simpleTransformer.encode('val', 'el'));
+      resp.add(_simpleTransformer.encode(dartsonPrefix, 'val', 'el'));
 
       // TODO: Add nested generics support
     } else {
-      resp.add(_entityTransformer.encode('val', 'el', new PropertyDefinition(
+      resp.add(_entityTransformer.encode(dartsonPrefix, 'val', 'el', new PropertyDefinition(
           definition.typeArguments[0], null, null, null)));
     }
     resp.add('  ${object}["${definition.serializedName}"].add(el);');

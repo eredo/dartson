@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4 (6/26/2015)
+- Added (circular) reference support
+- Fixed using package prefix for generated sources (transformer)
+
 ## 0.2.3 (5/25/2015)
 - Updated analyzer and test dependency (thanks to @rightisleft)
 

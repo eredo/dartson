@@ -4,6 +4,7 @@ export 'src/annotations.dart';
 export 'src/static_entity.dart';
 import 'src/static_entity.dart';
 import './type_transformer.dart';
+import 'src/reference_mapper.dart';
 
 import 'package:logging/logging.dart';
 import 'dart:convert' show Codec, JSON;
@@ -26,8 +27,51 @@ class _SimpleTypeTransformer extends TypeTransformer {
   encode(value) => value;
 }
 
+class _StaticEntityEncoderImpl extends StaticEntityEncoder {
+  final Map<Type, TypeTransformer> transformers;
+  final EncodingReferenceMapper mapper;
+
+  _StaticEntityEncoderImpl(this.transformers, this.mapper);
+
+  bool hasTransformer(Type type) => transformers[type] != null;
+  TypeTransformer getTransformer(Type type) => transformers[type];
+
+  bool isSerialized(Object instance) {
+    return mapper != null && mapper.isSerialized(instance);
+  }
+   Map createSerializablePlaceholder(Object instance) {
+     return mapper.createSerializablePlaceholder(instance);
+   }
+   void registerSerializableMap(Object instance, dynamic serializedObject) {
+     if (mapper != null) {
+       mapper.registerSerializableMap(instance, serializedObject);
+     }
+   }
+}
+class _StaticEntityDecoderImpl extends StaticEntityDecoder {
+  final Map<Type, TypeTransformer> transformers;
+  final DecodingReferenceMapper mapper;
+
+  _StaticEntityDecoderImpl(this.transformers, this.mapper);
+
+  bool hasTransformer(Type type) => transformers[type] != null;
+  TypeTransformer getTransformer(Type type) => transformers[type];
+
+  void registerInstanceIfApplicable(Object instance, Map serializableMap) {
+    if (mapper != null) {
+      mapper.registerInstanceIfApplicable(instance, serializableMap);
+    }
+  }
+  bool isPlaceholder(Object val) {
+    return mapper != null && mapper.isPlaceholder(val);
+  }
+  Object resolveReferenceForPlaceholder(Map placeholder) {
+    return mapper.resolveReferenceForPlaceholder(placeholder);
+  }
+}
+
 /// Static version of dartson.
-class Dartson extends TypeTransformerProvider {
+class Dartson  {
   final Codec _codec;
   final Logger _log;
   final Map<Type, TypeTransformer> transformers = {};
@@ -45,10 +89,8 @@ class Dartson extends TypeTransformerProvider {
     transformers[type] = transformer;
   }
 
-  bool hasTransformer(Type type) => transformers[type] != null;
-  TypeTransformer getTransformer(Type type) => transformers[type];
-
-  Object map(Object data, StaticEntity clazz, [bool isList = false]) {
+  Object map(Object data, StaticEntity clazz, [bool isList = false, bool beReferenceAware = false]) {
+    var staticEntityDecoder = new _StaticEntityDecoderImpl(this.transformers, beReferenceAware ? new DecodingReferenceMapper() : null);
     if (data is List && isList) {
       List returnList = [];
 
@@ -63,7 +105,7 @@ class Dartson extends TypeTransformerProvider {
           cl = clazz.newEntity();
         }
 
-        cl.dartsonEntityDecode(item, this);
+        cl.dartsonEntityDecode(item, staticEntityDecoder);
         returnList.add(cl);
       });
 
@@ -71,20 +113,20 @@ class Dartson extends TypeTransformerProvider {
     } else if (data is List || isList) {
       throw 'Incompatible none list type to list.';
     } else {
-      clazz.dartsonEntityDecode(data, this);
+      clazz.dartsonEntityDecode(data, staticEntityDecoder);
       return clazz;
     }
   }
 
-  Object serialize(Object data, {Type type}) {
+  Object serialize(Object data, {Type type, EncodingReferenceMapper mapper}) {
     var transformer;
 
     if (data is List) {
-      return _serializeList(data);
+      return _serializeList(data, mapper);
     } else if (data is Map) {
-      return _serializeMap(data);
+      return _serializeMap(data, mapper);
     } else if (data is StaticEntity) {
-      return data.dartsonEntityEncode(this);
+      return data.dartsonEntityEncode(new _StaticEntityEncoderImpl(this.transformers, mapper));
     } else if (type != null && (transformer = transformers[type]) != null) {
       return transformer.encode(data);
     } else {
@@ -92,22 +134,30 @@ class Dartson extends TypeTransformerProvider {
     }
   }
 
-  dynamic encode(Object clazz) {
-    return _codec.encode(serialize(clazz));
+  dynamic encodeReferenceAware(Object clazz) {
+    return encode(clazz, beReferenceAware: true);
   }
 
-  dynamic decode(var encoded, Object object, [bool isList = false]) {
-    return map(_codec.decode(encoded), object, isList);
+  dynamic encode(Object clazz, {bool beReferenceAware: false}) {
+    return _codec.encode(serialize(clazz, mapper: beReferenceAware ? new EncodingReferenceMapper() : null));
   }
 
-  List _serializeList(List list) {
-    return list.map((i) => serialize(i)).toList();
+  dynamic decodeReferenceAware(var encoded, Object object, [ bool isList = false]) {
+    return decode(encoded, object, isList, true);
   }
 
-  Map _serializeMap(Map map) {
+  dynamic decode(var encoded, Object object, [bool isList = false, bool beReferenceAware =  false]) {
+    return map(_codec.decode(encoded), object, isList, beReferenceAware);
+  }
+
+  List _serializeList(List list, [EncodingReferenceMapper mapper]) {
+    return list.map((i) => serialize(i, mapper: mapper)).toList();
+  }
+
+  Map _serializeMap(Map map, [EncodingReferenceMapper mapper]) {
     Map newMap = new Map<String, Object>();
     map.forEach((key, val) {
-      if (val != null) newMap[key] = serialize(val);
+      if (val != null) newMap[key] = serialize(val, mapper: mapper);
     });
 
     return newMap;
