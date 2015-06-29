@@ -484,7 +484,7 @@ class _EntityTransformWriter extends _TypeTransformWriter {
               '    ${object} = dson.createSerializablePlaceholder(${target});\n' +
               '  } else if (dson.hasTransformer(${definition.type})) {\n' +
               '    var encoded = dson.getTransformer(${definition.type}).encode(${target});\n' +
-              '    dson.registerSerializableMap(this, encoded);\n' +
+              '    dson.registerSerializableMap(${target}, encoded);\n' +
               '    ${object} = encoded;\n' +
               '  } else {\n' +
               '    ${object} = (${target} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_ENCODE_METHOD}(dson);\n' +
