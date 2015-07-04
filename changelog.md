@@ -1,4 +1,7 @@
 # Changelog
+## 0.2.4 (7/04/2015)
+- Support for "double" types
+- Update of source_spans dependency
 
 ## 0.2.3 (5/25/2015)
 - Updated analyzer and test dependency (thanks to @rightisleft)
