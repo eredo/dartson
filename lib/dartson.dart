@@ -21,6 +21,7 @@ class Dartson<T> {
   final Codec _codec;
   final Logger _log;
   final Map<String, TypeTransformer> _transformers = {};
+  final Map<String, Type> _types = {};
 
   Dartson(this._codec, [String identifier = 'dartson'])
       : _log = new Logger(identifier) {
@@ -41,12 +42,32 @@ class Dartson<T> {
   bool hasTransformer(Type type) =>
       _transformers[_getName(reflectType(type).qualifiedName)] != null;
 
+  /// Registers an identifier for the specific [type] to this darston instance.
+  /// Encoded result [T] will include these type information, and reused in [encode]/[decode] and [encodeReferenceAware]/[decodeReferenceAware].
+  addIdentifier(String identifier, Type type) {
+    _types[identifier] = type;
+  }
+
   /// Maps the values within [data] onto the [object] by reflecting the
   /// the type of object. The Class of [object] should have the [Entity]
   /// annotation to work properly when compiling to JavaScript.
+  /// Pass null for [object] will force using identifiers (see [addIdentifier] to create [object] instance.
   /// Returns the [object].
   Object map(Object data, Object object, [bool isList = false, bool beReferenceAware = false]) {
-    var reflectee = reflect(object);
+    var rootObject = object;
+    if (rootObject == null) {
+      var identifier = data is Map ? data[TYPE_KEY] : null;
+      if (identifier == null) {
+        throw new NullObjectError();
+      }
+      var type = _types[identifier];
+      if (type == null) {
+        throw new UnknownIdentifierError(identifier);
+      }
+      var c = reflectClass(type);
+      rootObject = c.newInstance(new Symbol(''), []).reflectee;
+    }
+    var reflectee = reflect(rootObject);
     var mapper = beReferenceAware ? new DecodingReferenceMapper() : null;
 
     if (data is List && isList) {
@@ -59,12 +80,12 @@ class Dartson<T> {
 
       return list;
     } else if (data is List && !isList) {
-      throw new IncorrectTypeTransform(object, 'List');
+      throw new IncorrectTypeTransform(rootObject, 'List');
     } else {
       _fillObject(reflectee, data, mapper);
     }
 
-    return object;
+    return rootObject;
   }
 
   /// Transforms an [object] to a serializable map which can be handled
@@ -90,18 +111,22 @@ class Dartson<T> {
 
   /// Decodes the [encoded] object (for example a JSON encoded string) using
   /// the [_codec] and then uses [map] to map it onto the [object].
+  /// Use [addIdentifier] to register type.
+  /// Pass null for [object] will force using identifiers (see [addIdentifier] to create [object] instance.
   Object decode(T encoded, Object object, [ bool isList = false, bool beReferenceAware =  false]) {
     return map(_codec.decode(encoded), object, isList, beReferenceAware);
   }
 
   /// Serializes the [decoded] object using [serialize] and then calls the encode
   /// method on the [_codec].
-  /// References to already mapped objects will be serialized by an placeholder (except Lists and Maps)
+  /// References to already mapped objects will be serialized by an placeholder (except Lists and Maps).
+  /// Optional use [addIdentifier] to register type.
   T encodeReferenceAware(Object decoded) {
     return encode(decoded, beReferenceAware: true);
   }
   /// Serializes the [decoded] object using [serialize] and then calls the encode
   /// method on the [_codec].
+  /// Optional use [addIdentifier] to register type.
   T encode(Object decoded, {bool beReferenceAware: false}) {
     return _codec.encode(serialize(decoded, beReferenceAware ? new EncodingReferenceMapper() : null));
   }
@@ -139,13 +164,27 @@ class Dartson<T> {
       if (mapper != null) {
         mapper.registerSerializableMap(object, result);
       }
-      reflectee.type.declarations.forEach((sym, decl) {
-        if (!decl.isPrivate &&
-            ((decl is VariableMirror && !decl.isConst && !decl.isStatic) ||
-                (decl is MethodMirror && decl.isGetter))) {
-          _setField(sym, decl, reflectee, result, mapper);
-        }
-      });
+      var key = _types.keys.firstWhere((key) => _types[key] == object.runtimeType, orElse: () => null);
+      if (key != null) {
+        result.putIfAbsent(TYPE_KEY, () => key);
+      }
+
+      // serialize bottom to top in class hierarchy as dart will also by default
+      // initialize all field before constructor bodies are run i.e. this.fields before super.
+      // see also https://www.dartlang.org/dart-tips/dart-tips-ep-11.html
+
+      var objectClassMirror = reflectClass(Object);
+      var type = reflectee.type;
+      while (type != null) {
+        type.declarations.forEach((sym, decl) {
+          if (!decl.isPrivate &&
+              ((decl is VariableMirror && !decl.isConst && !decl.isStatic) ||
+                  (decl is MethodMirror && decl.isGetter))) {
+            _setField(sym, decl, reflectee, result, mapper);
+          }
+        });
+        type = type.superclass == objectClassMirror ? null : type.superclass;
+      }
 
       _log.finer("Serialization completed.");
       return result;
@@ -180,47 +219,54 @@ class Dartson<T> {
   /// Puts the data of the [filler] into the object in [objMirror]
   /// Throws [IncorrectTypeTransform] if json data types doesn't match.
   void _fillObject(InstanceMirror objMirror, Map filler, DecodingReferenceMapper mapper) {
-    ClassMirror classMirror = objMirror.type;
 
     if (mapper != null) {
        mapper.registerInstanceIfApplicable(objMirror.reflectee, filler);
     }
 
-    classMirror.declarations.forEach((sym, decl) {
-      if (!decl.isPrivate &&
-          ((decl is VariableMirror && !decl.isFinal && !decl.isConst) ||
-              decl is MethodMirror)) {
-        String varName = _getName(sym);
-        String fieldName = varName;
-        TypeMirror valueType;
 
-        // if it's a setter function we need to change the name
-        if (decl is MethodMirror && decl.isSetter) {
-          fieldName = varName = varName.substring(0, varName.length - 1);
-          _log.finer('Found setter function varName: ' + varName);
-          valueType = decl.parameters[0].type;
-        } else if (decl is VariableMirror) {
-          valueType = decl.type;
-        } else {
-          return;
+    // fill bottom to top in class hierarchy as dart will also by default
+    // initialize all field before constructor bodies are run i.e. this.fields before super.
+    // see also https://www.dartlang.org/dart-tips/dart-tips-ep-11.html
+
+    var objectClassMirror = reflectClass(Object);
+    ClassMirror classMirror = objMirror.type;
+    while(classMirror != null) {
+      classMirror.declarations.forEach((sym, decl) {
+        if (!decl.isPrivate &&
+            ((decl is VariableMirror && !decl.isFinal && !decl.isConst) ||
+                decl is MethodMirror)) {
+          String varName = _getName(sym);
+          String fieldName = varName;
+          TypeMirror valueType;
+
+          // if it's a setter function we need to change the name
+          if (decl is MethodMirror && decl.isSetter) {
+            fieldName = varName = varName.substring(0, varName.length - 1);
+            _log.finer('Found setter function varName: ' + varName);
+            valueType = decl.parameters[0].type;
+          } else if (decl is VariableMirror) {
+            valueType = decl.type;
+          } else {
+            return;
+          }
+
+          // check if the property is renamed by DartsonProperty
+          Property prop = _getProperty(decl);
+          if (prop != null && prop.name != null) {
+            fieldName = prop.name;
+          }
+
+          _log.finer(
+              'Try to fill object with: ${fieldName}: ${filler[fieldName]}');
+          if (filler[fieldName] != null) {
+            objMirror.setField(new Symbol(varName),
+                _convertValue(valueType, filler[fieldName], varName, mapper));
+          }
         }
-
-        // check if the property is renamed by DartsonProperty
-        Property prop = _getProperty(decl);
-        if (prop != null && prop.name != null) {
-          fieldName = prop.name;
-        }
-
-        _log.finer(
-            'Try to fill object with: ${fieldName}: ${filler[fieldName]}');
-        if (filler[fieldName] != null) {
-          objMirror.setField(new Symbol(varName),
-              _convertValue(valueType, filler[fieldName], varName, mapper));
-        }
-      }
-    });
-
-
+      });
+      classMirror = classMirror.superclass == objectClassMirror ? null : classMirror.superclass;
+    }
 
     _log.fine("Filled object completly: ${filler}");
   }
@@ -229,7 +275,7 @@ class Dartson<T> {
   /// returns Deserialized value
   ///  Throws [IncorrectTypeTransform] if json data types doesn't match.
   ///  Throws [NoConstructorError]
-  Object _convertValue(TypeMirror valueType, Object value, String key, DecodingReferenceMapper mapper) {
+  Object _convertValue(TypeMirror defaultValueType, Object value, String key, DecodingReferenceMapper mapper) {
     if (mapper != null && mapper.isPlaceholder(value)) {
       var instance = mapper.resolveReferenceForPlaceholder(value);
       if (instance == null) {
@@ -237,6 +283,17 @@ class Dartson<T> {
       }
       return instance;
     }
+    var valueType = defaultValueType;
+
+    var identifier = value is Map ? value[TYPE_KEY] : null;
+    if (identifier != null) {
+      var type = _types[identifier];
+      if (type == null) {
+         throw new UnknownIdentifierError(identifier);
+      }
+      valueType = reflectClass(type);
+    }
+
     var symbolName = _getName(valueType.qualifiedName),
         transformer;
 

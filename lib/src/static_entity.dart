@@ -18,6 +18,8 @@ abstract class StaticEntityDecoder {
   void registerInstanceIfApplicable(Object instance, Map serializableMap);
   bool isPlaceholder(Object val);
   Object resolveReferenceForPlaceholder(Map placeholder);
+
+  Object createInstance(Map serializableMap, Object defaultInstance());
 }
 
 /// Classes that have the [Entity] annotation will be transformed by

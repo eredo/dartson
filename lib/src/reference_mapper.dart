@@ -1,5 +1,6 @@
 library dartson.references;
 
+const TYPE_KEY = '__identifier__';
 const INSTANCE_ID = '__instance#__';
 const REFERENCE_ID = '__reference#__';
 

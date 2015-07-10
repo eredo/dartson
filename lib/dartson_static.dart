@@ -8,6 +8,7 @@ import 'src/reference_mapper.dart';
 
 import 'package:logging/logging.dart';
 import 'dart:convert' show Codec, JSON;
+import 'dart:mirrors';
 
 final _SimpleTypeTransformer _st = new _SimpleTypeTransformer();
 final Map<Type, TypeTransformer> _transformers = {
@@ -27,11 +28,26 @@ class _SimpleTypeTransformer extends TypeTransformer {
   encode(value) => value;
 }
 
+class UnknownIdentifierError extends Error {
+  final String _identifier;
+
+  UnknownIdentifierError(this._identifier);
+
+  String toString() =>
+      "Type for identifier '${_identifier}' unknown. Use addIdentifier to register type information.";
+}
+class NullObjectError extends Error {
+
+  String toString() => "Object must not be null";
+
+}
+
 class _StaticEntityEncoderImpl extends StaticEntityEncoder {
   final Map<Type, TypeTransformer> transformers;
+  final Map<String, Type> types;
   final EncodingReferenceMapper mapper;
 
-  _StaticEntityEncoderImpl(this.transformers, this.mapper);
+  _StaticEntityEncoderImpl(this.transformers, this.types, this.mapper);
 
   bool hasTransformer(Type type) => transformers[type] != null;
   TypeTransformer getTransformer(Type type) => transformers[type];
@@ -46,13 +62,33 @@ class _StaticEntityEncoderImpl extends StaticEntityEncoder {
      if (mapper != null) {
        mapper.registerSerializableMap(instance, serializedObject);
      }
+     var key = types.keys.firstWhere((key) => types[key] == instance.runtimeType, orElse: () => null);
+     if (key != null) {
+       serializedObject.putIfAbsent(TYPE_KEY, () => key);
+     }
    }
 }
+
 class _StaticEntityDecoderImpl extends StaticEntityDecoder {
   final Map<Type, TypeTransformer> transformers;
+  final Map<String, Type> types;
   final DecodingReferenceMapper mapper;
 
-  _StaticEntityDecoderImpl(this.transformers, this.mapper);
+  _StaticEntityDecoderImpl(this.transformers, this.types, this.mapper);
+
+
+  Object createInstance(Map serializableMap, Object defaultInstance()) {
+    var identifier = serializableMap[TYPE_KEY];
+    if (identifier == null) {
+      return defaultInstance();
+    }
+    var type = types[identifier];
+    if (type == null) {
+      throw new UnknownIdentifierError(identifier);
+    }
+    var c = reflectClass(type);
+    return c.newInstance(new Symbol(''), []).reflectee;
+  }
 
   bool hasTransformer(Type type) => transformers[type] != null;
   TypeTransformer getTransformer(Type type) => transformers[type];
@@ -75,6 +111,7 @@ class Dartson  {
   final Codec _codec;
   final Logger _log;
   final Map<Type, TypeTransformer> transformers = {};
+  final Map<String, Type> _types = {};
 
   Dartson(this._codec, [String identifier = 'dartson'])
       : _log = new Logger(identifier) {
@@ -89,8 +126,26 @@ class Dartson  {
     transformers[type] = transformer;
   }
 
-  Object map(Object data, StaticEntity clazz, [bool isList = false, bool beReferenceAware = false]) {
-    var staticEntityDecoder = new _StaticEntityDecoderImpl(this.transformers, beReferenceAware ? new DecodingReferenceMapper() : null);
+  addIdentifier(String identifier, Type type) {
+    _types[identifier] = type;
+  }
+
+  Object map(Object data, StaticEntity entity, [bool isList = false, bool beReferenceAware = false]) {
+    var clazz = entity;
+      if (clazz == null) {
+        var identifier = data is Map ? data[TYPE_KEY] : null;
+        if (identifier == null) {
+          throw new NullObjectError();
+        }
+        var type = _types[identifier];
+        if (type == null) {
+          throw new UnknownIdentifierError(identifier);
+        }
+        var c = reflectClass(type);
+        clazz = c.newInstance(new Symbol(''), []).reflectee;
+      }
+
+    var staticEntityDecoder = new _StaticEntityDecoderImpl(this.transformers, this._types, beReferenceAware ? new DecodingReferenceMapper() : null);
     if (data is List && isList) {
       List returnList = [];
 
@@ -126,7 +181,7 @@ class Dartson  {
     } else if (data is Map) {
       return _serializeMap(data, mapper);
     } else if (data is StaticEntity) {
-      return data.dartsonEntityEncode(new _StaticEntityEncoderImpl(this.transformers, mapper));
+      return data.dartsonEntityEncode(new _StaticEntityEncoderImpl(this.transformers, this._types, mapper));
     } else if (type != null && (transformer = transformers[type]) != null) {
       return transformer.encode(data);
     } else {

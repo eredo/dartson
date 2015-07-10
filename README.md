@@ -310,5 +310,110 @@ void main() {
 }
 ```
 
+## Type Information (Identifiers)
 
+Type-identifiers are needed for polymorphic relationships (inheritance) or dynamic root object. Register type-identifier via ```dson.addIdentifier("identifier", type);```. These identifiers gets added to the serialized object in form of: ```{ "__identifier__": <type-identifier> }```. See sample below.
 
+```
+library example;
+
+import 'package:dartson/dartson.dart' as ds;
+
+@ds.Entity()
+class Company {
+  List<Employee> employees;
+}
+
+@ds.Entity()
+class Employee {
+  String name;
+}
+
+@ds.Entity()
+class Manager extends Employee {
+  List<Employee> team;
+}
+
+void main() {
+  var dson = new ds.Dartson.JSON();
+  dson.addIdentifier("employee", Employee);
+  dson.addIdentifier("mananger", Manager);
+
+  var e1 = new Employee()
+    ..name = 'Tim';
+  var e2 = new Employee()
+    ..name = 'Tom';
+  var m1 = new Manager()
+    ..name = 'Bob'
+    ..team = [e1, e2];
+
+  var company = new Company()
+    ..employees = [e1, e2, m1];
+
+  // serialize:
+  var json = dson.encodeReferenceAware(company);
+  
+/* will return:
+{  
+  "employees":[  
+    {  
+      "__identifier__":"employee",
+      "name":"Tim",
+      "__instance#__":1
+    },
+    {  
+      "__identifier__":"employee",
+      "name":"Tom",
+      "__instance#__":2
+    },
+    {  
+      "__identifier__":"mananger",
+      "team":[  
+        {  
+          "__reference#__":1
+        },
+        {  
+          "__reference#__":2
+        }
+      ],
+      "name":"Bob"
+    }
+  ]
+}
+*/
+
+  // deserialize:
+  var deserialized = dson.decodeReferenceAware(json, new Company());
+}
+```
+
+Also root objects can be serialized and deserialized using identifiers:
+
+```
+library example;
+
+import 'package:dartson/dartson.dart' as ds;
+
+@ds.Entity()
+class Company {
+}
+
+void main() {
+  var dson = new ds.Dartson.JSON();
+  dson.addIdentifier("company", Company);
+
+  var company = new Company();
+
+  // serialize:
+  var json = dson.encodeReferenceAware(company);
+  
+/* will return:
+{  
+  "__identifier__":"company",
+}
+*/
+
+  // deserialize - pass null to force identifier should be used for root object:
+  var deserialized = dson.decodeReferenceAware(json, null);
+}
+```

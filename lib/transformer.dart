@@ -129,9 +129,11 @@ class FileCompiler extends _ErrorCollector {
   /// Runs through all entities, builds the methods and injects them.
   void _prepareEntities() {
     entities.forEach((entity) {
+      // check only 1 level up (check whole inheritance will not make sense)
+      var isSubclass = entity.extendsClause != null && entities.contains(entity.extendsClause.parent);
       var entityMap = buildEntityMap(entity);
-      var encodeMethod = buildEncodingMethod(entityMap);
-      var decodeMethod = buildDecodingMethod(entityMap);
+      var encodeMethod = buildEncodingMethod(entityMap, isSubclass);
+      var decodeMethod = buildDecodingMethod(entityMap, isSubclass);
       var newEntityMethod = _buildNewEntityMethod(entity);
 
       editor.editor.edit(entity.endToken.end - 1, entity.endToken.end - 1,
@@ -271,7 +273,7 @@ class FileCompiler extends _ErrorCollector {
   }
 
   /// Builds the encoding method for the [Entity] annotated class.
-  String buildEncodingMethod(List<PropertyDefinition> definitions) {
+  String buildEncodingMethod(List<PropertyDefinition> definitions, bool isSubclass) {
     var encoderType = typeNameOptionalPrefixed(_dartsonPrefix, 'StaticEntityEncoder');
 
     List<String> resp = ['Map ${_DARTSON_ENCODE_METHOD}(${encoderType} dson) {'];
@@ -279,7 +281,7 @@ class FileCompiler extends _ErrorCollector {
     resp.add('return dson.createSerializablePlaceholder(this);');
     resp.add('}');
 
-    resp.add('var obj = {};');
+    resp.add(isSubclass ? 'var obj = super.dartsonEntityEncode(dson);' : 'var obj = {};');
     resp.add('dson.registerSerializableMap(this, obj);');
 
     resp.addAll(definitions.map((def) {
@@ -301,7 +303,7 @@ class FileCompiler extends _ErrorCollector {
   }
 
   /// Builds the decoding method for the [Entity] annotated class.
-  String buildDecodingMethod(List<PropertyDefinition> definitions) {
+  String buildDecodingMethod(List<PropertyDefinition> definitions, bool isSubclass) {
     var decoderType = typeNameOptionalPrefixed(_dartsonPrefix, 'StaticEntityDecoder');
 
     List<String> resp = [
@@ -319,7 +321,10 @@ class FileCompiler extends _ErrorCollector {
         return _entityTransformer.decode(_dartsonPrefix, 'this', 'obj', def);
       }
     }));
-    resp.add("}");
+    if (isSubclass) {
+      resp.add("super.dartsonEntityDecode(obj, dson);\n");
+    }
+    resp.add("}\n");
 
     return resp.join('\n');
   }
@@ -449,7 +454,7 @@ class _EntityTransformWriter extends _TypeTransformWriter {
               '  } else if (dson.hasTransformer(${definition.type})) {\n' +
               '    ${target}.${definition.name} = dson.getTransformer(${definition.type}).decode(${object}["${definition.serializedName}"]);\n' +
               '  } else {\n' +
-              '    ${target}.${definition.name} = new ${definition.type}();\n' +
+              '    ${target}.${definition.name} = dson.createInstance(${object}["${definition.serializedName}"], () => new ${definition.type}());\n' +
               '    (${target}.${definition.name} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_DECODE_METHOD}(${object}["${definition.serializedName}"], dson);\n'
               '  }\n' + '}'
           : 'if (${object} != null) {\n' +
@@ -458,7 +463,7 @@ class _EntityTransformWriter extends _TypeTransformWriter {
               '  } else if (dson.hasTransformer(${definition.type})) {\n' +
               '    ${target} = dson.getTransformer(${definition.type}).decode(${object});\n' +
               '  } else {\n' +
-              '    ${target} = new ${definition.type}();\n' +
+              '    ${target} = dson.createInstance(val, () => new ${definition.type}());\n' +
               '    (${target} as ${typeNameOptionalPrefixed(dartsonPrefix, 'StaticEntity')}).${_DARTSON_DECODE_METHOD}(${object}, dson);\n' +
               '  }\n' +
               '}';

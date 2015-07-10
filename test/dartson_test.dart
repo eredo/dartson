@@ -3,6 +3,7 @@ library test_dartson;
 import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
 import './reference_aware_test.dart';
+import './polymorphic_test.dart';
 import 'package:test/test.dart';
 
 @MirrorsUsed(targets: const ['test_dartson'], override: '*')
@@ -204,9 +205,8 @@ void main() {
   });
 
 
-  test('reference aware', () {
-    testSerializeAndDeserializeReferenceAware(dson);
-  });
+  testSerializeAndDeserializeReferenceAware(() => new Dartson.JSON());
+  testSerializeAndDeserializePolymorphic(() => new Dartson.JSON());
 }
 
 class SimpleTransformer extends TypeTransformer<DateTime> {
