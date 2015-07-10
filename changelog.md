@@ -1,9 +1,9 @@
 # Changelog
 
-## 0.2.5 (7/10/2015)
+## 0.2.6 (7/10/2015)
 - Added support for polymorphic relationships (inheritance) and dynamic root objects.
 
-## 0.2.4 (6/26/2015)
+## 0.2.5 (6/26/2015)
 - Added (circular) reference support
 - Fixed using package prefix for generated sources (transformer)
 
