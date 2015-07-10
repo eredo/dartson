@@ -1,4 +1,7 @@
 # Changelog
+## 0.2.4 (7/04/2015)
+- Support for "double" types
+- Update of source_spans dependency
 
 ## 0.2.6 (7/10/2015)
 - Added support for polymorphic relationships (inheritance) and dynamic root objects.

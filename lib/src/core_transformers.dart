@@ -2,13 +2,8 @@ part of dartson;
 
 const _getName = MirrorSystem.getName;
 
-final Symbol _QN_STRING = reflectClass(String).qualifiedName;
-final Symbol _QN_NUM = reflectClass(num).qualifiedName;
-final Symbol _QN_INT = reflectClass(int).qualifiedName;
-final Symbol _QN_BOOL = reflectClass(bool).qualifiedName;
 final Symbol _QN_LIST = reflectClass(List).qualifiedName;
 final Symbol _QN_MAP = reflectClass(Map).qualifiedName;
-final Symbol _QN_OBJECT = reflectClass(Object).qualifiedName;
 
 var _qn = (Type t) => _getName(reflectClass(t).qualifiedName);
 
@@ -19,6 +14,7 @@ final Map<String, TypeTransformer> _simpleTransformers = {
   _qn(String): _defaultSimpleTransformer,
   _qn(num): _defaultSimpleTransformer,
   _qn(int): _defaultSimpleTransformer,
+  _qn(double): _defaultSimpleTransformer,
   _qn(bool): _defaultSimpleTransformer,
   _qn(List): _defaultSimpleTransformer,
   _qn(Map): _defaultSimpleTransformer,

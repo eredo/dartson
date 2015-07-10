@@ -15,7 +15,7 @@ import 'package:analyzer/src/generated/scanner.dart';
 import 'package:source_maps/refactor.dart';
 import 'package:source_span/source_span.dart' show SourceFile;
 
-const SIMPLE_TYPES = const ['String', 'num', 'bool', 'int', 'List', 'Map'];
+const SIMPLE_TYPES = const ['String', 'num', 'bool', 'double', 'int', 'List', 'Map'];
 
 // in order to make the code more maintainable we reflect the Entity class to get the simpleName
 final _DARTSON_ENTITY_NAME =

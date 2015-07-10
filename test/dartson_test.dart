@@ -84,11 +84,12 @@ void main() {
 
   test('parse: parser simple', () {
     TestClass1 test = dson.decode(
-        '{"name":"test","matter":true,"intNumber":2,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}',
+        '{"name":"test","matter":true,"intNumber":2,"doubleNumber":2.11,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}',
         new TestClass1());
     expect(test.name, 'test');
     expect(test.matter, true);
     expect(test.intNumber, 2);
+    expect(test.doubleNumber, 2.11);
     expect(test.number, 5);
     expect(test.list.length, 3);
     expect(test.list[1], 2);
@@ -231,6 +232,7 @@ class TestClass1 {
   Map map;
   TestClass1 child;
   int intNumber;
+  double doubleNumber;
 
   @Property(ignore: true)
   bool ignored;

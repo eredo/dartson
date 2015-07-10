@@ -4,17 +4,18 @@
 
 Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean of `fromJSON` and `toJSON` functions by using dart:mirrors reflection. **It works after dart2js compiling.**
 
-## Transformer implementation
-This build contains the first version of a transformer. **IT IS STILL UNDER DEVELOPMENT AND NOT COMPLETELY TESTED YET**
+## Transformer
 Add the following lines to the pubspec.yaml in order to use the transformer:
 
 ```
 transformers:
 - dartson
+...
 ```
 
 Remove the @MirrorsUsed annotation and the assigned import if it's no longer used by any other library.
 When using the transformer, mirrors are completely removed when pub build is called.
+
 
 ### Features not completed yet
 - Support of nested generics (example: ```Map<String,List<MyClass>>```)
@@ -24,23 +25,18 @@ When using the transformer, mirrors are completely removed when pub build is cal
 
 
 ### How the transformer works
-
 1. All dartson imports "package:dartson/dartson.dart" are rewritten to "package:dartson/dartson_static.dart"
 2. Classes that are annotated using "@Entity" receive 3 methods "dartsonEntityEncode", "dartsonEntityDecode", "newEntity" and implement "StaticEntity"
 
-### Known issues:
 
+### Known issues:
 - Entities cannot contain one of the following methods: "dartsonEntityEncode", "dartsonEntityDecode", "newEntity"
 - The interface StaticEntity will be added to the global namespace, there shouldn't be any other class named the same
 - Entities need to have a default constructor without any arguments
 - Entities of third party libraries do not work
 - Entities can only extend other Entities
+- Dartson transformer should be placed on top of all transformers to prevent CodeTransform issues (known when using polymer)
 
-
-## Latest changes
-- dartson now supports custom transformer for specific type / an example for a basic DateTime converter can be found in:  
-- transformer support
-- TypeTransformer support for dart2js transformer
 
 ## Serializing objects in dart
 
@@ -122,8 +118,8 @@ void main() {
 }
 ```
 
-## Mapping Maps and Lists to dart objects
 
+## Mapping Maps and Lists to dart objects
 Frameworks like Angular.dart come with several HTTP services which already transform the HTTP response to a map using JSON.encode. To use those encoded Maps or Lists use `map`.
 
 ```dart
@@ -167,7 +163,6 @@ void main() {
 
 
 ## Writting custom TypeTransformers
-
 Transformers are used to encode / decode none serializable types that shouldn't be treated  as objects / lists (for example DateTime).
 
 ```dart
