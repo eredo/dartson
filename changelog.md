@@ -1,14 +1,14 @@
 # Changelog
-## 0.2.4 (7/04/2015)
-- Support for "double" types
-- Update of source_spans dependency
-
 ## 0.2.6 (7/10/2015)
 - Added support for polymorphic relationships (inheritance) and dynamic root objects.
 
 ## 0.2.5 (6/26/2015)
 - Added (circular) reference support
 - Fixed using package prefix for generated sources (transformer)
+
+## 0.2.4 (7/04/2015)
+- Support for "double" types
+- Update of source_spans dependency
 
 ## 0.2.3 (5/25/2015)
 - Updated analyzer and test dependency (thanks to @rightisleft)
