@@ -1,7 +1,7 @@
 library dartson_test.test_polymorphic;
 
-import 'package:test/test.dart';
-import './fixture/polymorphic_model.dart';
+import '../../packages/test/test.dart';
+import '../fixture/polymorphic_model.dart';
 
 const json = '{"employees":[{"__identifier__":"employee","name":"Tim","__instance#__":1},{"__identifier__":"employee","name":"Tom","__instance#__":2},{"__identifier__":"mananger","team":[{"__reference#__":1},{"__reference#__":2}],"name":"Bob"}]}';
 

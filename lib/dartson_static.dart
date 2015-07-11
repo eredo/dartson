@@ -5,6 +5,7 @@ export 'src/static_entity.dart';
 import 'src/static_entity.dart';
 import './type_transformer.dart';
 import 'src/reference_mapper.dart';
+import 'src/shared_exceptions.dart';
 
 import 'package:logging/logging.dart';
 import 'dart:convert' show Codec, JSON;
@@ -26,20 +27,6 @@ class _SimpleTypeTransformer extends TypeTransformer {
 
   @override
   encode(value) => value;
-}
-
-class UnknownIdentifierError extends Error {
-  final String _identifier;
-
-  UnknownIdentifierError(this._identifier);
-
-  String toString() =>
-      "Type for identifier '${_identifier}' unknown. Use addIdentifier to register type information.";
-}
-class NullObjectError extends Error {
-
-  String toString() => "Object must not be null";
-
 }
 
 class _StaticEntityEncoderImpl extends StaticEntityEncoder {

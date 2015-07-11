@@ -6,6 +6,7 @@ export 'src/annotations.dart';
 import 'src/annotations.dart';
 import './type_transformer.dart';
 import 'src/reference_mapper.dart';
+import 'src/shared_exceptions.dart';
 
 @MirrorsUsed(metaTargets: const [Property], override: '*')
 import 'dart:mirrors';

@@ -2,8 +2,8 @@ library test_dartson;
 
 import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
-import './reference_aware_test.dart';
-import './polymorphic_test.dart';
+import './shared/polymorphic_test.dart';
+import './shared/reference_aware_test.dart';
 import 'package:test/test.dart';
 
 @MirrorsUsed(targets: const ['test_dartson'], override: '*')
