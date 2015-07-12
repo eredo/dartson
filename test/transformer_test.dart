@@ -1,6 +1,8 @@
 library dartson.transformer.test;
 
 import 'dart:io';
+import 'dart:isolate';
+import 'dart:async';
 
 import '../lib/transformer.dart';
 
@@ -11,6 +13,8 @@ import 'package:test/test.dart';
 String get _testDirPath => p.dirname(p.fromUri(Platform.script));
 
 void main() {
+  var tempDir;
+
   // test the compiler
   var simplePath = p.join(_testDirPath, 'fixture/simple_class.dart');
   FileCompiler compiler = new FileCompiler(simplePath);
@@ -19,6 +23,12 @@ void main() {
   });
 
   CompilationUnitMember simpleClass;
+
+  tearDown(() {
+    if (tempDir != null) {
+      tempDir.deleteSync(recursive: true);
+    }
+  });
 
   test('should contain the SimpleClass declaration', () {
     expect(compiler.compilationUnit.declarations.any((CompilationUnitMember m) {
@@ -76,23 +86,65 @@ void main() {
   });
 
   test('build and compile code for circular referenced model', () {
-    var tempDir = Directory.systemTemp.createTempSync('dartson_');
-    print('Generating code into: ${tempDir.path}');
+    tempDir = Directory.systemTemp.createTempSync('dartson_');
 
-    var newCompiler =
-        new FileCompiler(p.join(_testDirPath, 'fixture/circular_referenced_model.dart'));
-    var newCode = newCompiler.build('package:dartson/test/circular_referenced_model.dart');
-    var newFile = new File(p.join(tempDir.path, 'circular_referenced_model.dart'));
-    newFile.writeAsStringSync(newCode);
+    var compiledFixture = compileFixtureToDirectory('circular_referenced_model.dart', tempDir);
+    var fixtureTest = generateFixtureTest(
+        compiledFixture,
+        tempDir,
+        'reference_aware_test.dart',
+        'testSerializeAndDeserializeReferenceAware');
+
+    var response = new ReceivePort();
+    Isolate.spawnUri(Uri.parse(fixtureTest.path), [], response.sendPort);
+
+    // TODO check failed?
   });
+
   test('build and compile code for polymorphic model', () {
-    var tempDir = Directory.systemTemp.createTempSync('dartson_');
-    print('Generating code into: ${tempDir.path}');
+    tempDir = Directory.systemTemp.createTempSync('dartson_');
 
-    var newCompiler =
-        new FileCompiler(p.join(_testDirPath, 'fixture/polymorphic_model.dart'));
-    var newCode = newCompiler.build('package:dartson/test/polymorphic_model.dart');
-    var newFile = new File(p.join(tempDir.path, 'polymorphic_model.dart'));
-    newFile.writeAsStringSync(newCode);
+    var compiledFixture = compileFixtureToDirectory('polymorphic_model.dart', tempDir);
+    var fixtureTest = generateFixtureTest(
+        compiledFixture,
+        tempDir,
+        'polymorphic_test.dart',
+        'testSerializeAndDeserializePolymorphic');
+
+    var response = new ReceivePort();
+    Isolate.spawnUri(Uri.parse(fixtureTest.path), [], response.sendPort);
+
+    // TODO check failed?
   });
+}
+
+File compileFixtureToDirectory(String dartFile, Directory toDir) {
+  var newCompiler = new FileCompiler(p.join(_testDirPath, 'fixture/$dartFile'));
+  var newCode = newCompiler.build('package:dartson/test/$dartFile');
+  var newFile = new File(p.join(toDir.path, 'fixture/$dartFile'))..createSync(recursive: true);
+  newFile.writeAsStringSync(newCode);
+  return newFile;
+}
+
+File generateFixtureTest(File compiledFixture, Directory toDir, String sharedTestHelper, String testMethod) {
+  var targetSharedTestHelper = new File(p.join(toDir.path, 'shared/${sharedTestHelper}'))
+    ..createSync(recursive: true);
+  new File(p.join(_testDirPath, 'shared/${sharedTestHelper}'))
+    ..copySync(targetSharedTestHelper.path);
+
+  var testRunnerFile = new File(p.join(toDir.path, 'testrunner.dart'));
+  testRunnerFile.writeAsStringSync('''
+  library dartson_test.test;
+
+  import 'package:dartson/dartson_static.dart' as ds;
+  import 'package:test/test.dart';
+
+  import './shared/${sharedTestHelper}';
+
+  void main() {
+    $testMethod(() => new ds.Dartson.JSON());
+  }
+
+  ''');
+  return testRunnerFile;
 }

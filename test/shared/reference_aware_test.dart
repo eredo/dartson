@@ -1,6 +1,6 @@
 library dartson_test.test_referenceaware;
 
-import '../../packages/test/test.dart';
+import 'package:test/test.dart';
 import '../fixture/circular_referenced_model.dart';
 
 const json = '{"persons":[{"id":1,"name":"Yin","__instance#__":1,"parent":{"id":2,"name":"Yang","parent":{"__reference#__":1},"__instance#__":2}},{"__reference#__":2},{"id":3,"name":"Noname"}],"tags":[{"id":1,"name":"Test","persons":[{"__reference#__":1},{"__reference#__":2}]}]}';

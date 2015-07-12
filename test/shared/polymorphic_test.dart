@@ -1,6 +1,7 @@
 library dartson_test.test_polymorphic;
 
-import '../../packages/test/test.dart';
+import 'dart:convert' as convert;
+import 'package:test/test.dart';
 import '../fixture/polymorphic_model.dart';
 
 const json = '{"employees":[{"__identifier__":"employee","name":"Tim","__instance#__":1},{"__identifier__":"employee","name":"Tom","__instance#__":2},{"__identifier__":"mananger","team":[{"__reference#__":1},{"__reference#__":2}],"name":"Bob"}]}';
@@ -25,7 +26,9 @@ void testSerializeAndDeserializePolymorphic(var dsonFactory) {
     var company = new Company()
       ..employees = [e1, e2, m1];
 
-    expect(dson.encodeReferenceAware(company), json);
+    // encoded json might differ in order of field of super classes
+    // therefore compare map instead of string
+    expect(convert.JSON.decode(dson.encodeReferenceAware(company)),  convert.JSON.decode(json));
   });
 
   test('parse: inheritance', () {
