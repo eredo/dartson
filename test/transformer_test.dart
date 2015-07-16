@@ -53,7 +53,10 @@ void main() {
 
   test('the compiler should contain the SimpleClass', () {
     expect(compiler.entities.any((m) => m.name.name == 'SimpleClass'), true);
+
+
   });
+
 
   List<PropertyDefinition> entityMap;
   test('fetch entity map from simpleClass', () {
@@ -85,7 +88,7 @@ void main() {
     newFile.writeAsStringSync(newCode);
   });
 
-  test('build and compile code for circular referenced model', () {
+  test('build, compile and run code for circular referenced model', () {
     tempDir = Directory.systemTemp.createTempSync('dartson_');
 
     var compiledFixture = compileFixtureToDirectory('circular_referenced_model.dart', tempDir);
@@ -95,13 +98,11 @@ void main() {
         'reference_aware_test.dart',
         'testSerializeAndDeserializeReferenceAware');
 
-    var response = new ReceivePort();
-    Isolate.spawnUri(Uri.parse(fixtureTest.path), [], response.sendPort);
+    runTestIsolated(fixtureTest);
 
-    // TODO check failed?
   });
 
-  test('build and compile code for polymorphic model', () {
+  test('build, compile and run code for polymorphic model', () {
     tempDir = Directory.systemTemp.createTempSync('dartson_');
 
     var compiledFixture = compileFixtureToDirectory('polymorphic_model.dart', tempDir);
@@ -111,10 +112,7 @@ void main() {
         'polymorphic_test.dart',
         'testSerializeAndDeserializePolymorphic');
 
-    var response = new ReceivePort();
-    Isolate.spawnUri(Uri.parse(fixtureTest.path), [], response.sendPort);
-
-    // TODO check failed?
+    runTestIsolated(fixtureTest);
   });
 }
 
@@ -138,13 +136,22 @@ File generateFixtureTest(File compiledFixture, Directory toDir, String sharedTes
 
   import 'package:dartson/dartson_static.dart' as ds;
   import 'package:test/test.dart';
+  import 'dart:isolate';
 
   import './shared/${sharedTestHelper}';
 
-  void main() {
-    $testMethod(() => new ds.Dartson.JSON());
+  void main(List<String> args, SendPort replyTo) {
+    $testMethod(() => new ds.Dartson.JSON()).then((success) => replyTo.send(success));
   }
 
   ''');
   return testRunnerFile;
+}
+
+void runTestIsolated(fixtureTest) {
+  var done = expectAsync((){});
+  var response = new ReceivePort();
+  Isolate.spawnUri(Uri.parse(fixtureTest.path), [], response.sendPort)
+    .then((_) => response.first)
+    .then((success) { expect(success, true); done(); });
 }
