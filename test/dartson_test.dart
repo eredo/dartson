@@ -4,9 +4,6 @@ import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
 import 'package:test/test.dart';
 
-@MirrorsUsed(targets: const ['test_dartson'], override: '*')
-import 'dart:mirrors';
-
 void main() {
   var dson = new Dartson.JSON();
 
@@ -201,6 +198,14 @@ void main() {
     obj.testDate = new DateTime.now();
     var str = dson.encode(obj);
     expect(str, '{"testDate":"${obj.testDate.toString()}"}');
+  });
+
+  test('serialize double number in num', () {
+    var obj = new TestClass1();
+    obj.number = 1;
+
+    var str = dson.encode(obj);
+    expect(str, '{"number":1}');
   });
 }
 
