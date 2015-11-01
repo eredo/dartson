@@ -10,6 +10,12 @@ import 'dart:mirrors';
 void main() {
   var dson = new Dartson.JSON();
 
+  Map payload = {"collection_key":"Purchases","flightID":1006,"flightLevel":3,"ccn":60.0,"ccv":64.0,"bZip":50.0,"ccType":"mastercard"};
+  test("Serialize a payload with mixed numeric types", () {
+    dson.serialize(payload);
+    expect(true, true);
+  });
+
   test('serialize: simple array test', () {
     String str = dson.encode(['test1', 'test2']);
     expect(str, '["test1","test2"]');
