@@ -82,12 +82,21 @@ void main() {
 
   test('parse: parser simple', () {
     TestClass1 test = dson.decode(
-        '{"name":"test","matter":true,"intNumber":2,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test"}',
+        '{"name":"test",'
+            '"matter":true,'
+            '"intNumber":2,'
+            '"aDouble":50.555,'
+            '"number":50.1,'
+            '"list":[1,2,3],'
+            '"map":{"k":"o"},'
+            '"the_renamed":"test"}',
         new TestClass1());
+
     expect(test.name, 'test');
     expect(test.matter, true);
     expect(test.intNumber, 2);
-    expect(test.number, 5);
+    expect(test.number, 50.1);
+    expect(test.aDouble, 50.555);
     expect(test.list.length, 3);
     expect(test.list[1], 2);
     expect(test.map["k"], "o");
@@ -201,6 +210,32 @@ void main() {
     var str = dson.encode(obj);
     expect(str, '{"testDate":"${obj.testDate.toString()}"}');
   });
+
+  test('map: parse complex object)', () {
+    Map params = new Map();
+    params['name'] = "Test";
+    params['matter'] = true;
+    params['intNumber'] = 2;
+    params['aDouble'] = 3.14159;
+    params['number'] = 50.1;
+    params['numberTwo'] = 50.15;
+    params['list'] = [1,2,3];
+    params['map'] = {"k":"o"};
+    params['the_renamed'] = "test";
+
+    TestClass1 test = dson.map(params, new TestClass1() );
+
+    expect(test.name, 'Test');
+    expect(test.matter, true);
+    expect(test.intNumber, 2);
+    expect(test.number, 50.1);
+    expect(test.numberTwo, 50.15);
+    expect(test.aDouble, 3.14159);
+    expect(test.list.length, 3);
+    expect(test.list[1], 2);
+    expect(test.map["k"], "o");
+    expect(test.renamed, "test");
+  });
 }
 
 class SimpleTransformer extends TypeTransformer<DateTime> {
@@ -220,11 +255,13 @@ class SimpleDateContainer {
 class TestClass1 {
   String name;
   bool matter;
+  int intNumber;
   num number;
+  num numberTwo;
+  double aDouble;
   List list;
   Map map;
   TestClass1 child;
-  int intNumber;
 
   @Property(ignore: true)
   bool ignored;
