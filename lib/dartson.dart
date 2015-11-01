@@ -100,7 +100,14 @@ class Dartson<T> {
   Map _serializeMap(Map object) {
     var map = {};
     object.forEach((k, v) {
-      if (v != null) map[k] = serialize(v);
+      if (v != null) {
+        if(_isSimpleType(v.runtimeType))
+        {
+          map[k] = v;
+        } else {
+          map[k] = serialize(v);
+        }
+      }
     });
     return map;
   }
