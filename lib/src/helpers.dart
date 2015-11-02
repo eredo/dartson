@@ -18,6 +18,7 @@ bool _isSimpleType(Type type) {
       type == bool ||
       type == String ||
       type == num ||
+      type == int ||
       type == double ||
       type == Map ||
       type == dynamic;

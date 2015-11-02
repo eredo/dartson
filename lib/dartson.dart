@@ -153,6 +153,14 @@ class Dartson<T> {
       fieldName = prop.name;
     }
 
+    //Check if simple value
+    if(value != null && _isSimpleType(value.runtimeType) && (prop != null ? !prop.ignore : true) )
+    {
+      result[fieldName] = value;
+      return;
+    }
+
+    //Check if complex value
     if (value != null && (prop != null ? !prop.ignore : true)) {
       _log.finer("Serializing field: ${fieldName}");
       result[fieldName] = serialize(value);
