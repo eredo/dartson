@@ -1,4 +1,7 @@
 # Changelog
+## 0.2.6 (10/05/2015)
+- Bump dependency versions in pubspec
+
 ## 0.2.4 (7/04/2015)
 - Support for "double" types
 - Update of source_spans dependency
