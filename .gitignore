@@ -10,3 +10,4 @@ pubspec.lock
 doc-viewer/
 test/tmp/
 .pub
+.packages
