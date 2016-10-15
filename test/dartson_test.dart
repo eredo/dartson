@@ -210,6 +210,7 @@ void main() {
     expect(str, '{"number":1}');
   });
 
+  // shared tests (here we test serialization with not transformed model)
   testSerializeAndDeserializeReferenceAware(() => new Dartson.JSON());
   testSerializeAndDeserializePolymorphic(() => new Dartson.JSON());
 }

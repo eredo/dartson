@@ -14,7 +14,7 @@ var testsOK = 0;
 
 void main() {}
 
-/// dson: static or mirror-based version of Dartson
+/// dson: static or mirror-based version of Dartson (test will be called by darton_test and transformer_test)
 Future<bool> testSerializeAndDeserializeReferenceAware(var dsonFactory) {
   var completer = new Completer<bool>();
 
