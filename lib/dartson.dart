@@ -114,13 +114,17 @@ class Dartson<T> {
       return transformer.encode(object);
     } else {
       Map result = new Map<String, Object>();
-      reflectee.type.declarations.forEach((sym, decl) {
-        if (!decl.isPrivate &&
-            ((decl is VariableMirror && !decl.isConst && !decl.isStatic) ||
-                (decl is MethodMirror && decl.isGetter))) {
-          _setField(sym, decl, reflectee, result);
-        }
-      });
+      for (ClassMirror classMirror = reflectee.type; classMirror != null
+          && classMirror.reflectedType != Object;
+          classMirror = classMirror.superclass) {
+        classMirror.declarations.forEach((sym, decl) {
+          if (!decl.isPrivate &&
+              ((decl is VariableMirror && !decl.isConst && !decl.isStatic) ||
+                  (decl is MethodMirror && decl.isGetter))) {
+            _setField(sym, decl, reflectee, result);
+          }
+        });
+      }
 
       _log.finer("Serialization completed.");
       return result;
