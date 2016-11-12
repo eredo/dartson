@@ -114,6 +114,15 @@ void main() {
     ExtendedClass1 testExtended = dson.decode(
         '{"name":"test","matter":true,"intNumber":2,"doubleNumber":2.11,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test","extendedClassName":"test","extendedClassMatter":true,"extendedClassIntNumber":2,"extendedClassDoubleNumber":2.11,"extendedClassNumber":5,"extendedClassList":[1,2,3],"extendedClassMap":{"k":"o"},"the_extended_Class_renamed":"test"}',
         new ExtendedClass1());
+    expect(testExtended.name, 'test');
+    expect(testExtended.matter, true);
+    expect(testExtended.intNumber, 2);
+    expect(testExtended.doubleNumber, 2.11);
+    expect(testExtended.number, 5);
+    expect(testExtended.list.length, 3);
+    expect(testExtended.list[1], 2);
+    expect(testExtended.map["k"], "o");
+    expect(testExtended.renamed, "test");
     expect(testExtended.extendedClassName, 'test');
     expect(testExtended.extendedClassMatter, true);
     expect(testExtended.extendedClassIntNumber, 2);
