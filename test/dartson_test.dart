@@ -52,6 +52,12 @@ void main() {
     test.name = "test1";
     String str = dson.encode(test);
     expect(str, '{"name":"test1"}');
+
+    test = new ExtendedClass1();
+    test.name = "test1";
+    test.extendedClassName = "extended test1";
+    str = dson.encode(test);
+    expect(str, '{"extendedClassName":"extended test1","name":"test1"}');
   });
 
   test('serialize: ignore in object', () {
@@ -59,12 +65,26 @@ void main() {
     test.name = "test";
     test.ignored = true;
     expect(dson.encode(test), '{"name":"test"}');
+
+    test = new ExtendedClass1();
+    test.name = "test";
+    test.ignored = true;
+    test.extendedClassName = "extended test";
+    test.extendedClassIgnored = true;
+    expect(dson.encode(test),
+        '{"extendedClassName":"extended test","name":"test"}');
   });
 
   test('serialize: renamed property of object', () {
     var test = new TestClass1();
     test.renamed = "test";
     expect(dson.encode(test), '{"the_renamed":"test"}');
+
+    test = new ExtendedClass1();
+    test.renamed = "test";
+    test.extendedClassRenamed = "extended test";
+    expect(dson.encode(test),
+        '{"the_extended_Class_renamed":"extended test","the_renamed":"test"}');
   });
 
   test('serialize: simple getter class', () {
@@ -90,6 +110,29 @@ void main() {
     expect(test.list[1], 2);
     expect(test.map["k"], "o");
     expect(test.renamed, "test");
+
+    ExtendedClass1 testExtended = dson.decode(
+        '{"name":"test","matter":true,"intNumber":2,"doubleNumber":2.11,"number":5,"list":[1,2,3],"map":{"k":"o"},"the_renamed":"test","extendedClassName":"test","extendedClassMatter":true,"extendedClassIntNumber":2,"extendedClassDoubleNumber":2.11,"extendedClassNumber":5,"extendedClassList":[1,2,3],"extendedClassMap":{"k":"o"},"the_extended_Class_renamed":"test"}',
+        new ExtendedClass1());
+    expect(testExtended.name, 'test');
+    expect(testExtended.matter, true);
+    expect(testExtended.intNumber, 2);
+    expect(testExtended.doubleNumber, 2.11);
+    expect(testExtended.number, 5);
+    expect(testExtended.list.length, 3);
+    expect(testExtended.list[1], 2);
+    expect(testExtended.map["k"], "o");
+    expect(testExtended.renamed, "test");
+    expect(testExtended.extendedClassName, 'test');
+    expect(testExtended.extendedClassMatter, true);
+    expect(testExtended.extendedClassIntNumber, 2);
+    expect(testExtended.extendedClassDoubleNumber, 2.11);
+    expect(testExtended.extendedClassNumber, 5);
+    expect(testExtended.extendedClassList.length, 3);
+    expect(testExtended.extendedClassList[1], 2);
+    expect(testExtended.extendedClassMap["k"], "o");
+    expect(testExtended.extendedClassRenamed, "test");
+
   });
 
   test('parse: no constructor found', () {
@@ -206,7 +249,16 @@ void main() {
 
     var str = dson.encode(obj);
     expect(str, '{"number":1}');
+
+    var extendedObj = new ExtendedClass1();
+    extendedObj.number = 1;
+    extendedObj.extendedClassNumber = 2;
+
+    str = dson.encode(extendedObj);
+    expect(str, '{"extendedClassNumber":2,"number":1}');
+
   });
+
 }
 
 class SimpleTransformer extends TypeTransformer<DateTime> {
@@ -240,6 +292,23 @@ class TestClass1 {
   String renamed;
 
   TestClass1();
+}
+
+class ExtendedClass1 extends TestClass1 {
+  String extendedClassName;
+  bool extendedClassMatter;
+  num extendedClassNumber;
+  List extendedClassList;
+  Map extendedClassMap;
+  TestClass1 extendedClassChild;
+  int extendedClassIntNumber;
+  double extendedClassDoubleNumber;
+
+  @Property(ignore: true)
+  bool extendedClassIgnored;
+
+  @Property(name: "the_extended_Class_renamed")
+  String extendedClassRenamed;
 }
 
 class JustObject {
