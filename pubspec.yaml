@@ -6,7 +6,7 @@ homepage: https://github.com/eredo/dartson
 environment:
   sdk: ">=1.3.0"
 dependencies:
-  analyzer: ">=0.22.4 <0.28.0"
+  analyzer: ">=0.22.4 <0.30.0"
   barback: ">=0.15.2+2 <0.16.0"
   logging: ">=0.9.3 <0.12.0"
   source_maps: ">=0.10.0 <0.11.0"
