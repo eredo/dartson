@@ -76,6 +76,10 @@ void main() {
             new NestedClass("test", [1, 2, 3], new TestGetter("get it"))),
         '{"name":"test","list":[1,2,3],"getter":{"name":"get it"}}');
   });
+  
+  test('serialize: utf8', () {
+    expect(dson.encode('→'), equals('"→"'));
+  });
 
   test('parse: parser simple', () {
     TestClass1 test = dson.decode(
