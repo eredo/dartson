@@ -1,10 +1,10 @@
 # Feature proposal: `@anyProperty`
 
-This feature was requested in issue #41. 
+This feature was requested in issue [#41](https://github.com/eredo/dartson/issues/41). 
 
 ## Goal
 
-Provide a map of values which where provided in the original map during decoding but didn't have a defined property in
+Provide a map of values which were provided in the original map during decoding but didn't have a property defined in
 the target object. 
 
 ## Example
