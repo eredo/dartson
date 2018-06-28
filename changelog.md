@@ -1,4 +1,11 @@
 # Changelog
+
+# Changelog
+## 0.2.7 (15/10/2016)
+- Added support for polymorphic relationships (inheritance) and dynamic root objects.
+- Added (circular) reference support
+- Fixed using package prefix for generated sources (transformer)
+
 ## 0.2.6 (10/05/2015)
 - Bump dependency versions in pubspec
 

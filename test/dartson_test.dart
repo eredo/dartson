@@ -2,6 +2,8 @@ library test_dartson;
 
 import '../lib/dartson.dart';
 import '../lib/type_transformer.dart';
+import './shared/polymorphic_test.dart';
+import './shared/reference_aware_test.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -211,6 +213,10 @@ void main() {
     var str = dson.encode(obj);
     expect(str, '{"number":1}');
   });
+
+  // shared tests (here we test serialization with not transformed model)
+  testSerializeAndDeserializeReferenceAware(() => new Dartson.JSON());
+  testSerializeAndDeserializePolymorphic(() => new Dartson.JSON());
 }
 
 class SimpleTransformer extends TypeTransformer<DateTime> {
