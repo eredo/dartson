@@ -2,165 +2,38 @@
 [![Pub Version](https://img.shields.io/pub/v/dartson.svg)](https://pub.dartlang.org/packages/dartson)
 [![Build Status](https://travis-ci.org/eredo/dartson.svg?branch=master)](https://travis-ci.org/eredo/dartson)
 
-Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean of `fromJSON` and `toJSON` functions by using dart:mirrors reflection. **It works after dart2js compiling.**
+Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean
+of `fromJSON` and `toJSON` functions by providing a builder which provides the serialization mappings.
 
-## Transformer
-Add the following lines to the pubspec.yaml in order to use the transformer:
+## Usage
+
+Add the following lines to your `pubspec.yaml` in order to use dartson:
 
 ```
-transformers:
-- dartson
-...
+dependencies:
+  dartson: ^1.0.0
+  
+dev_dependencies:
+  build_runner: ^0.10.0
 ```
 
-Remove the @MirrorsUsed annotation and the assigned import if it's no longer used by any other library.
-When using the transformer, mirrors are completely removed when pub build is called.
-
-
-### Features not completed yet
-- Support of nested generics (example: ```Map<String,List<MyClass>>```)
-- Support of methods within entities (example: ```String getAName() => "${whatEver}.Name";```)
-- "as" import of dartson within a library separated into parts
-- Complete end2end testing
-
-
-### How the transformer works
-1. All dartson imports "package:dartson/dartson.dart" are rewritten to "package:dartson/dartson_static.dart"
-2. Classes that are annotated using "@Entity" receive 3 methods "dartsonEntityEncode", "dartsonEntityDecode", "newEntity" and implement "StaticEntity"
-
-
-### Known issues:
-- Entities cannot contain one of the following methods: "dartsonEntityEncode", "dartsonEntityDecode", "newEntity"
-- The interface StaticEntity will be added to the global namespace, there shouldn't be any other class named the same
-- Entities need to have a default constructor without any arguments
-- Entities of third party libraries do not work
-- Entities can only extend other Entities
-- Dartson transformer should be placed on top of all transformers to prevent CodeTransform issues (known when using polymer)
-
-
-## Serializing objects in dart
+Dartson is using a central serializer instead of generated serializers for each object, therefore
+create a central file which refers the objects that need to be serialized:
 
 ```dart
-library example;
-
 import 'package:dartson/dartson.dart';
+import 'package:some_dependency/some_class.dart';
 
-@Entity()
-class EntityClass {
-  String name;
-  
-  @Property(name:"renamed")
-  bool otherName;
-  
-  @Property(ignore:true)
-  String notVisible;
-  
-  // private members are never serialized
-  String _private = "name";
-  
-  String get doGetter => _private;
-}
+import 'my_class.dart';
 
-void main() {
-  var dson = new Dartson.JSON();
-
-  EntityClass object = new EntityClass();
-  object.name = "test";
-  object.otherName = "blub";
-  object.notVisible = "hallo";
-  
-  String jsonString = dson.encode(object);
-  print(jsonString);
-  // will return: '{"name":"test","renamed":"blub","doGetter":"name"}'
-}
+@Serializer(
+  entities: [
+    MyClass,
+    SomeClass,
+  ],
+)
+final Dartson serializer = serializer$dartson;
 ```
-
-
-## Parsing json to dart object
-
-```dart
-library example;
-
-import 'package:dartson/dartson.dart';
-
-@Entity()
-class EntityClass {
-  String name;
-  String _setted;
-  
-  @Property(name:"renamed")
-  bool otherName;
-  
-  @Property(ignore:true)
-  String notVisible;
-  
-  List<EntityClass> children;
-  
-  set setted(String s) => _setted = s;
-  String get setted => _setted;
-}
-
-void main() {
-  var dson = new Dartson.JSON();
-
-  EntityClass object = dson.decode('{"name":"test","renamed":"blub","notVisible":"it is", "setted": "awesome"}', new EntityClass());
-  
-  print(object.name); // > test
-  print(object.otherName); // > blub
-  print(object.notVisible); // > it is
-  print(object.setted); // > awesome
-  
-  // to parse a list of items use [decode] and set the third argument to true
-  List<EntityClass> list = dson.decode('[{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}]', new EntityClass(), true);
-  print(list.length); // > 2
-  print(list[0].name); // > test
-  print(list[0].children[0].name); // > child1
-}
-```
-
-
-## Mapping Maps and Lists to dart objects
-Frameworks like Angular.dart come with several HTTP services which already transform the HTTP response to a map using JSON.encode. To use those encoded Maps or Lists use `map`.
-
-```dart
-library example;
-
-import 'package:dartson/dartson.dart';
-
-@Entity()
-class EntityClass {
-  String name;
-  String _setted;
-  
-  @Property(name:"renamed")
-  bool otherName;
-  
-  @Property(ignore:true)
-  String notVisible;
-  
-  List<EntityClass> children;
-  
-  set setted(String s) => _setted = s;
-  String get setted => _setted;
-}
-
-void main() {
-  var dson = new Dartson.JSON();
-
-  EntityClass object = dson.map({"name":"test","renamed":"blub","notVisible":"it is", "setted": "awesome"}, new EntityClass());
-  print(object.name); // > test
-  print(object.otherName); // > blub
-  print(object.notVisible); // > it is
-  print(object.setted); // > awesome
-  
-  // to parse a list of items use [map] and set the third argument to true
-  List<EntityClass> list = dson.map([{"name":"test", "children": [{"name":"child1"},{"name":"child2"}]},{"name":"test2"}], new EntityClass(), true);
-  print(list.length); // > 2
-  print(list[0].name); // > test
-  print(list[0].children[0].name); // > child1
-}
-```
-
 
 ## Writting custom TypeTransformers
 Transformers are used to encode / decode none serializable types that shouldn't be treated  as objects / lists (for example DateTime).
@@ -168,37 +41,28 @@ Transformers are used to encode / decode none serializable types that shouldn't 
 ```dart
 
 /// A simple DateTime transformer which uses the toString() method.
-class DateTimeParser<T> extends TypeTransformer {
-  T decode(dynamic value) {
-    return DateTime.parse(value);
-  }
+class DateTimeParser extends TypeTransformer<String, DateTime> {
+  DateTime decode(String value) => DateTime.parse(value);
 
-  dynamic encode(T value) {
-    return value.toString();
-  }
+  String encode(DateTime value) => value.toString();
 }
 ```
 
-In order to use the TypeTransformer you need to register the transformer in a main function:
+In order to use the TypeTransformer you need to register the transformer for the serializer:
 
 ```dart
-// ...
-void main() {
-  var dson = new Dartson.JSON();
-  dson.addTransformer(new DateTimeParser(), DateTime);
-}
-```
-
-## Use default transformers
-
-```dart
-library test;
-
 import 'package:dartson/dartson.dart';
 import 'package:dartson/transformers/date_time.dart';
 
-void main() {
-  var dson = new Dartson.JSON();
-  dson.addTransformer(new DateTimeParser(), DateTime);
-}
+import 'my_class.dart';
+
+@Serializer(
+  entities: [
+    MyClass,
+  ],
+  transformers: [
+    DateTimeParser,
+  ],
+)
+final Dartson serializer = serializer$dartson;
 ```

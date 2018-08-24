@@ -1,4 +1,12 @@
 # Changelog
+## 1.0.0-alpha (TBD)
+- Support dart 2.0 with `build_runner`
+
+**Breaking changes**
+ 
+- `@Entity` is deprecated and ignored
+- See `README.md` for how to use dartson `1.0.0`
+
 ## 0.2.6 (10/05/2015)
 - Bump dependency versions in pubspec
 

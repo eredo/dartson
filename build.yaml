@@ -1,0 +1,8 @@
+builders:
+  dartson:
+    import: "package:dartson/builder.dart"
+    builder_factories: ["dartsonBuilder"]
+    build_extensions: {".dart": [".dartson.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: ["source_gen|combining_builder"]

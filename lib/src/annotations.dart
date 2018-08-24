@@ -1,5 +1,7 @@
 library dartson.annotations;
 
+import 'dart:convert';
+
 /// Annotation class to mark a class as serializable. This is required
 /// if the dartson builder has to build an entity map for dart2js.
 class Entity {
@@ -8,13 +10,18 @@ class Entity {
 
 /// Annotation class to describe properties of a class member.
 class Property {
-  final bool _ignore;
+  final bool ignore;
   final String name;
 
-  const Property({bool ignore, String name})
-      : this._ignore = ignore,
-        this.name = name;
+  const Property({this.ignore = false, this.name});
 
-  bool get ignore => _ignore == null ? false : _ignore;
-  String toString() => "DartsonProperty: Name: ${name} , Ignore: ${ignore}";
+  String toString() => "DartsonProperty: Name: $name , Ignore: $ignore";
+}
+
+class Serializer {
+  final List<Type> entities;
+  final List<Type> transformers;
+  final Codec codec;
+
+  const Serializer({this.entities, this.codec, this.transformers});
 }
