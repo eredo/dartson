@@ -11,6 +11,9 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
   obj['name'] = object.name;
   obj['number'] = object.number;
   obj['boolean'] = object.hasBoolean;
+  obj['numDouble'] = object.numDouble;
+  obj['inherited'] = object.inherited;
+  obj['inheritName'] = object.inheritedRenamed;
   return obj;
 }
 
@@ -19,6 +22,9 @@ MyClass _MyClass$decoder(Map<String, dynamic> data, Dartson inst) {
   obj.name = data['name'];
   obj.number = data['number'];
   obj.hasBoolean = data['boolean'];
+  obj.numDouble = data['numDouble'];
+  obj.inherited = data['inherited'];
+  obj.inheritedRenamed = data['inheritName'];
   return obj;
 }
 

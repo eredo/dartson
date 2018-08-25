@@ -8,6 +8,12 @@ import 'package:source_gen/source_gen.dart';
 import 'package:dart_style/dart_style.dart';
 
 import 'annotations.dart';
+import 'utils.dart';
+
+const _encodeMethodIdentifier = r'$encoder';
+const _decodeMethodIdentifier = r'$decoder';
+const _serializerIdentifier = r'$dartson';
+const _implementationIdentifier = r'_Dartson$impl';
 
 class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
   @override
@@ -22,29 +28,40 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
       final el = e.toTypeValue();
       final classElement = el.element as ClassElement;
 
-      str.write(_buildEncoder(classElement).accept(emitter));
-      str.write(_buildDecoder(classElement).accept(emitter));
+      str.write(_EntityGenerator(classElement).build(emitter));
     });
 
-    str.write(_buildDartson(entities).accept(emitter));
-    str.write(refer('_Dartson\$impl')
+    str.write(_DartsonGenerator(entities.toSet()).build(emitter));
+    str.write(refer(_implementationIdentifier)
         .newInstance([])
-        .assignFinal('${element.name}\$dartson')
+        .assignFinal('${element.name}$_serializerIdentifier')
         .statement
         .accept(emitter));
 
     final formatter = new DartFormatter();
     return formatter.format(str.toString());
   }
+}
+
+class _DartsonGenerator {
+  final Set<DartObject> objects;
+
+  _DartsonGenerator(this.objects);
+
+  String build(DartEmitter emitter) {
+    return _buildDartson(objects).accept(emitter).toString();
+  }
 
   Spec _buildDartson(Iterable<DartObject> objects) {
     final mapValues = <Object, Object>{};
 
-    objects.map((obj) => obj.toTypeValue()).forEach((t) =>
-        mapValues[refer(t.name)] = refer('DartsonEntity').newInstance(
-            [refer('_${t.name}\$encoder'), refer('_${t.name}\$decoder')],
-            {},
-            [refer(t.name)]));
+    objects.map((obj) => obj.toTypeValue()).forEach(
+        (t) => mapValues[refer(t.name)] = refer('DartsonEntity').newInstance([
+              refer('_${t.name}$_encodeMethodIdentifier'),
+              refer('_${t.name}$_decodeMethodIdentifier'),
+            ], {}, [
+              refer(t.name)
+            ]));
 
     final lookupMap = literalMap(mapValues, refer('Type', 'dart:core'),
         refer('DartsonEntity', 'package:dartson/dartson.dart'));
@@ -53,9 +70,23 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
         (mb) => mb..initializers.add(refer('super').call([lookupMap]).code));
 
     return Class((cb) => cb
-      ..name = '_Dartson\$impl'
+      ..name = _implementationIdentifier
       ..extend = refer('Dartson', 'package:dartson/dartson.dart')
       ..constructors.add(constr));
+  }
+}
+
+class _EntityGenerator {
+  final ClassElement _element;
+  final Set<FieldElement> _fields;
+
+  _EntityGenerator(this._element) : this._fields = sortedFieldSet(_element);
+
+  String build(DartEmitter emitter) {
+    final buffer = new StringBuffer();
+    buffer.write(_buildEncoder(_element).accept(emitter));
+    buffer.write(_buildDecoder(_element).accept(emitter));
+    return buffer.toString();
   }
 
   Method _buildEncoder(ClassElement classElement) {
@@ -64,16 +95,21 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
       ..addExpression(refer('Map<String, dynamic>', 'dart:core')
           .newInstance([]).assignFinal('obj'));
 
-    classElement.fields.where((f) => !_ignoreField(f)).forEach((f) {
+    for (var field in _fields) {
+      final fieldProperty = propertyAnnotation(field);
+      if (fieldProperty.ignore) {
+        continue;
+      }
+
       block.addExpression(obj
-          .index(literalString(_propertyName(f)))
-          .assign(refer('object').property(f.name)));
-    });
+          .index(literalString(fieldProperty.name ?? field.name))
+          .assign(refer('object').property(field.name)));
+    }
 
     block.addExpression(obj.returned);
 
     return Method((b) => b
-      ..name = '_${classElement.name}\$encoder'
+      ..name = '_${classElement.name}$_encodeMethodIdentifier'
       ..returns = refer('Map<String, dynamic>')
       ..requiredParameters.addAll([
         Parameter((pb) => pb
@@ -92,16 +128,21 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
       ..addExpression(
           refer(classElement.name).newInstance([]).assignFinal('obj'));
 
-    classElement.fields.where((f) => !_ignoreField(f)).forEach((f) {
+    for (var field in _fields) {
+      final fieldProperty = propertyAnnotation(field);
+      if (fieldProperty.ignore) {
+        continue;
+      }
+
       block.addExpression(refer('obj')
-          .property(f.name)
-          .assign(obj.index(literalString(_propertyName(f)))));
-    });
+          .property(field.name)
+          .assign(obj.index(literalString(fieldProperty.name ?? field.name))));
+    }
 
     block.addExpression(refer('obj').returned);
 
     return Method((b) => b
-      ..name = '_${classElement.name}\$decoder'
+      ..name = '_${classElement.name}$_decodeMethodIdentifier'
       ..returns = refer(classElement.name)
       ..requiredParameters.addAll([
         Parameter((pb) => pb
@@ -113,32 +154,4 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
       ])
       ..body = block.build());
   }
-}
-
-DartObject _propertyAnnotation(FieldElement f) {
-  final annotations = TypeChecker.fromRuntime(Property).annotationsOf(f);
-
-  if (annotations.isNotEmpty) {
-    return annotations.last;
-  }
-
-  return null;
-}
-
-String _propertyName(FieldElement f) {
-  final annotation = _propertyAnnotation(f);
-  if (!(annotation?.getField('name')?.isNull ?? true)) {
-    return annotation.getField('name').toStringValue();
-  }
-
-  return f.name;
-}
-
-bool _ignoreField(FieldElement f) {
-  final annotation = _propertyAnnotation(f);
-  if (!(annotation?.getField('ignore')?.isNull ?? true)) {
-    return annotation.getField('ignore').toBoolValue();
-  }
-
-  return false;
 }
