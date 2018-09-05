@@ -9,6 +9,7 @@ import 'package:source_gen/source_gen.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:json_serializable/type_helper.dart';
 import 'package:json_serializable/src/type_helpers/value_helper.dart';
+import 'package:json_serializable/src/type_helpers/enum_helper.dart';
 
 import 'annotations.dart';
 import 'transformer_generator.dart';
@@ -18,6 +19,8 @@ const _encodeMethodIdentifier = r'$encoder';
 const _decodeMethodIdentifier = r'$decoder';
 const _serializerIdentifier = r'$dartson';
 const _implementationIdentifier = r'_Dartson$impl';
+
+// TODO: Properly separate the generators.
 
 class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
   @override
@@ -89,18 +92,24 @@ class _EntityGenerator {
   final ClassElement _element;
   final Set<FieldElement> _fields;
   final Iterable<TypeHelper> _helpers;
+  final _fieldContexts = <FieldContext>[];
 
   _EntityGenerator(this._element, TransformerGenerator _transformers)
       : _fields = sortedFieldSet(_element),
         _helpers = <TypeHelper>[_transformers].followedBy([
           ValueHelper(),
           UriHelper(),
+          EnumHelper(),
         ]);
 
   String build(DartEmitter emitter) {
-    final buffer = new StringBuffer();
+    final buffer = StringBuffer();
     buffer.write(_buildEncoder(_element).accept(emitter));
     buffer.write(_buildDecoder(_element).accept(emitter));
+    Set<String>()
+      ..addAll(_fieldContexts.expand((f) => f.members))
+      ..forEach(buffer.write);
+
     return buffer.toString();
   }
 
@@ -112,10 +121,12 @@ class _EntityGenerator {
 
     for (var field in _fields) {
       final fieldProperty = propertyAnnotation(field);
-      final fieldContext = FieldContext(true, field.metadata, _helpers);
       if (fieldProperty.ignore) {
         continue;
       }
+
+      final fieldContext = FieldContext(true, field.metadata, _helpers);
+      _fieldContexts.add(fieldContext);
 
       block.addExpression(obj
           .index(literalString(fieldProperty.name ?? field.name))
@@ -146,10 +157,11 @@ class _EntityGenerator {
 
     for (var field in _fields) {
       final fieldProperty = propertyAnnotation(field);
-      final fieldContext = FieldContext(true, field.metadata, _helpers);
       if (fieldProperty.ignore) {
         continue;
       }
+      final fieldContext = FieldContext(true, field.metadata, _helpers);
+      _fieldContexts.add(fieldContext);
 
       block.addExpression(refer('obj').property(field.name).assign(
           CodeExpression(Code(fieldContext.deserialize(
@@ -177,11 +189,14 @@ class FieldContext implements DeserializeContext, SerializeContext {
   final bool nullable;
   final List<ElementAnnotation> metadata;
   final Iterable<TypeHelper> helpers;
+  final List<String> members = [];
 
   FieldContext(this.nullable, this.metadata, this.helpers);
 
   @override
-  void addMember(String memberContent) {}
+  void addMember(String memberContent) {
+    members.add(memberContent);
+  }
 
   // TODO: Proper error message.
   @override

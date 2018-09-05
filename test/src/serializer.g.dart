@@ -15,6 +15,8 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
   obj['numDouble'] = object.numDouble;
   obj['uri'] = object.uri?.toString();
   obj['dateTime'] = _transformer0.encode(object.dateTime);
+  obj['myEnum'] = _$MyEnumEnumMap[object.myEnum];
+  obj['secondEnum'] = _$SecondEnumEnumMap[object.secondEnum];
   obj['inherited'] = object.inherited;
   obj['inheritName'] = object.inheritedRenamed;
   return obj;
@@ -28,9 +30,40 @@ MyClass _MyClass$decoder(Map<String, dynamic> data, Dartson inst) {
   obj.numDouble = (data['numDouble'] as num)?.toDouble();
   obj.uri = data['uri'] == null ? null : Uri.parse(data['uri'] as String);
   obj.dateTime = _transformer0.decode(data['dateTime'] as String);
+  obj.myEnum = _$enumDecodeNullable(_$MyEnumEnumMap, data['myEnum']);
+  obj.secondEnum =
+      _$enumDecodeNullable(_$SecondEnumEnumMap, data['secondEnum']);
   obj.inherited = data['inherited'] as bool;
   obj.inheritedRenamed = data['inheritName'] as String;
   return obj;
+}
+
+const _$MyEnumEnumMap = <MyEnum, dynamic>{
+  MyEnum.firstValue: 'firstValue',
+  MyEnum.secondValue: 'secondValue'
+};
+const _$SecondEnumEnumMap = <SecondEnum, dynamic>{
+  SecondEnum.has: 'has',
+  SecondEnum.nothing: 'nothing'
+};
+T _$enumDecode<T>(Map<T, dynamic> enumValues, dynamic source) {
+  if (source == null) {
+    throw ArgumentError('A value must be provided. Supported values: '
+        '${enumValues.values.join(', ')}');
+  }
+  return enumValues.entries
+      .singleWhere((e) => e.value == source,
+          orElse: () => throw ArgumentError(
+              '`$source` is not one of the supported values: '
+              '${enumValues.values.join(', ')}'))
+      .key;
+}
+
+T _$enumDecodeNullable<T>(Map<T, dynamic> enumValues, dynamic source) {
+  if (source == null) {
+    return null;
+  }
+  return _$enumDecode<T>(enumValues, source);
 }
 
 class _Dartson$impl extends Dartson {

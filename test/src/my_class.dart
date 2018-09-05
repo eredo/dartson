@@ -1,5 +1,8 @@
 import 'package:dartson/dartson.dart';
 
+enum MyEnum { firstValue, secondValue }
+enum SecondEnum { has, nothing }
+
 class MyClass extends BaseClass {
   String name;
   int number;
@@ -10,6 +13,8 @@ class MyClass extends BaseClass {
   double numDouble;
   Uri uri;
   DateTime dateTime;
+  MyEnum myEnum;
+  SecondEnum secondEnum;
 }
 
 class BaseClass {
