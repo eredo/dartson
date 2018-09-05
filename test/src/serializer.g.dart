@@ -20,6 +20,7 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
   obj['dateTime'] = _transformer0.encode(object.dateTime);
   obj['myEnum'] = _$MyEnumEnumMap[object.myEnum];
   obj['secondEnum'] = _$SecondEnumEnumMap[object.secondEnum];
+  obj['subClass'] = _SubClass$encoder(object.subClass, inst);
   obj['inherited'] = object.inherited;
   obj['inheritName'] = object.inheritedRenamed;
   return obj;
@@ -39,6 +40,7 @@ MyClass _MyClass$decoder(Map<String, dynamic> data, Dartson inst) {
   obj.myEnum = _$enumDecodeNullable(_$MyEnumEnumMap, data['myEnum']);
   obj.secondEnum =
       _$enumDecodeNullable(_$SecondEnumEnumMap, data['secondEnum']);
+  obj.subClass = _SubClass$decoder(data['subClass'], inst);
   obj.inherited = data['inherited'] as bool;
   obj.inheritedRenamed = data['inheritName'] as String;
   return obj;
@@ -72,11 +74,31 @@ T _$enumDecodeNullable<T>(Map<T, dynamic> enumValues, dynamic source) {
   return _$enumDecode<T>(enumValues, source);
 }
 
+Map<String, dynamic> _SubClass$encoder(SubClass object, Dartson inst) {
+  if (object == null) {
+    return null;
+  }
+  final obj = new Map<String, dynamic>();
+  obj['name'] = object.name;
+  return obj;
+}
+
+SubClass _SubClass$decoder(Map<String, dynamic> data, Dartson inst) {
+  if (data == null) {
+    return null;
+  }
+  final obj = new SubClass();
+  obj.name = data['name'] as String;
+  return obj;
+}
+
 class _Dartson$impl extends Dartson {
   _Dartson$impl()
       : super(<Type, DartsonEntity>{
           MyClass:
-              new DartsonEntity<MyClass>(_MyClass$encoder, _MyClass$decoder)
+              const DartsonEntity<MyClass>(_MyClass$encoder, _MyClass$decoder),
+          SubClass: const DartsonEntity<SubClass>(
+              _SubClass$encoder, _SubClass$decoder)
         });
 }
 

@@ -31,7 +31,7 @@ class DartsonEntity<T> {
   final Map<String, dynamic> Function(T obj, Dartson inst) encoder;
   final T Function(Map<String, dynamic> data, Dartson inst) decoder;
 
-  DartsonEntity(this.encoder, this.decoder);
+  const DartsonEntity(this.encoder, this.decoder);
 }
 
 class DartsonEntityNotExistsException implements Exception {}

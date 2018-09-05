@@ -33,6 +33,8 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
     final emitter = DartEmitter();
     final str = StringBuffer();
     final trans = TransformerGenerator(transformers);
+    final entityHelper =
+        ExistingEntityHelper(entities.map((e) => e.toTypeValue()).toList());
 
     str.write(trans.build(emitter));
 
@@ -40,7 +42,8 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
       final el = e.toTypeValue();
       final classElement = el.element as ClassElement;
 
-      str.write(_EntityGenerator(classElement, trans).build(emitter));
+      str.write(
+          _EntityGenerator(classElement, trans, entityHelper).build(emitter));
     });
 
     str.write(_DartsonGenerator(entities.toSet()).build(emitter));
@@ -68,7 +71,7 @@ class _DartsonGenerator {
     final mapValues = <Object, Object>{};
 
     objects.map((obj) => obj.toTypeValue()).forEach(
-        (t) => mapValues[refer(t.name)] = refer('DartsonEntity').newInstance([
+        (t) => mapValues[refer(t.name)] = refer('DartsonEntity').constInstance([
               refer('_${t.name}$_encodeMethodIdentifier'),
               refer('_${t.name}$_decodeMethodIdentifier'),
             ], {}, [
@@ -94,9 +97,10 @@ class _EntityGenerator {
   final Iterable<TypeHelper> _helpers;
   final _fieldContexts = <FieldContext>[];
 
-  _EntityGenerator(this._element, TransformerGenerator _transformers)
+  _EntityGenerator(this._element, TransformerGenerator _transformers,
+      ExistingEntityHelper entities)
       : _fields = sortedFieldSet(_element),
-        _helpers = <TypeHelper>[_transformers].followedBy([
+        _helpers = <TypeHelper>[_transformers, entities].followedBy([
           ValueHelper(),
           UriHelper(),
           EnumHelper(),
@@ -184,6 +188,31 @@ class _EntityGenerator {
           ..type = refer('Dartson'))
       ])
       ..body = block.build());
+  }
+}
+
+class ExistingEntityHelper implements TypeHelper {
+  final List<DartType> entities;
+  ExistingEntityHelper(this.entities);
+
+  @override
+  String deserialize(
+      DartType targetType, String expression, DeserializeContext context) {
+    if (!entities.contains(targetType)) {
+      return null;
+    }
+
+    return '_${targetType.displayName}$_decodeMethodIdentifier($expression, inst)';
+  }
+
+  @override
+  String serialize(
+      DartType targetType, String expression, SerializeContext context) {
+    if (!entities.contains(targetType)) {
+      return null;
+    }
+
+    return '_${targetType.displayName}$_encodeMethodIdentifier($expression, inst)';
   }
 }
 

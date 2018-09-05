@@ -1,5 +1,7 @@
 import 'package:dartson/dartson.dart';
 
+import 'sub_class.dart';
+
 enum MyEnum { firstValue, secondValue }
 enum SecondEnum { has, nothing }
 
@@ -15,6 +17,7 @@ class MyClass extends BaseClass {
   DateTime dateTime;
   MyEnum myEnum;
   SecondEnum secondEnum;
+  SubClass subClass;
 }
 
 class BaseClass {
