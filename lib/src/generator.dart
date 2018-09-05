@@ -2,12 +2,16 @@ import 'dart:async';
 
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/type.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:build/src/builder/build_step.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:dart_style/dart_style.dart';
+import 'package:json_serializable/type_helper.dart';
+import 'package:json_serializable/src/type_helpers/value_helper.dart';
 
 import 'annotations.dart';
+import 'transformer_generator.dart';
 import 'utils.dart';
 
 const _encodeMethodIdentifier = r'$encoder';
@@ -20,15 +24,20 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
   FutureOr<String> generateForAnnotatedElement(
       Element element, ConstantReader annotation, BuildStep buildStep) {
     final entities = annotation.objectValue.getField('entities').toListValue();
+    final transformers =
+        annotation.objectValue.getField('transformers').toListValue();
 
     final emitter = DartEmitter();
     final str = StringBuffer();
+    final trans = TransformerGenerator(transformers);
+
+    str.write(trans.build(emitter));
 
     entities.forEach((e) {
       final el = e.toTypeValue();
       final classElement = el.element as ClassElement;
 
-      str.write(_EntityGenerator(classElement).build(emitter));
+      str.write(_EntityGenerator(classElement, trans).build(emitter));
     });
 
     str.write(_DartsonGenerator(entities.toSet()).build(emitter));
@@ -79,8 +88,14 @@ class _DartsonGenerator {
 class _EntityGenerator {
   final ClassElement _element;
   final Set<FieldElement> _fields;
+  final Iterable<TypeHelper> _helpers;
 
-  _EntityGenerator(this._element) : this._fields = sortedFieldSet(_element);
+  _EntityGenerator(this._element, TransformerGenerator _transformers)
+      : _fields = sortedFieldSet(_element),
+        _helpers = <TypeHelper>[_transformers].followedBy([
+          ValueHelper(),
+          UriHelper(),
+        ]);
 
   String build(DartEmitter emitter) {
     final buffer = new StringBuffer();
@@ -97,13 +112,15 @@ class _EntityGenerator {
 
     for (var field in _fields) {
       final fieldProperty = propertyAnnotation(field);
+      final fieldContext = FieldContext(true, field.metadata, _helpers);
       if (fieldProperty.ignore) {
         continue;
       }
 
       block.addExpression(obj
           .index(literalString(fieldProperty.name ?? field.name))
-          .assign(refer('object').property(field.name)));
+          .assign(CodeExpression(Code(
+              fieldContext.serialize(field.type, 'object.${field.name}')))));
     }
 
     block.addExpression(obj.returned);
@@ -123,20 +140,20 @@ class _EntityGenerator {
   }
 
   Method _buildDecoder(ClassElement classElement) {
-    final obj = refer('data');
     final block = BlockBuilder()
       ..addExpression(
           refer(classElement.name).newInstance([]).assignFinal('obj'));
 
     for (var field in _fields) {
       final fieldProperty = propertyAnnotation(field);
+      final fieldContext = FieldContext(true, field.metadata, _helpers);
       if (fieldProperty.ignore) {
         continue;
       }
 
-      block.addExpression(refer('obj')
-          .property(field.name)
-          .assign(obj.index(literalString(fieldProperty.name ?? field.name))));
+      block.addExpression(refer('obj').property(field.name).assign(
+          CodeExpression(Code(fieldContext.deserialize(
+              field.type, 'data[\'${fieldProperty.name ?? field.name}\']')))));
     }
 
     block.addExpression(refer('obj').returned);
@@ -154,4 +171,34 @@ class _EntityGenerator {
       ])
       ..body = block.build());
   }
+}
+
+class FieldContext implements DeserializeContext, SerializeContext {
+  final bool nullable;
+  final List<ElementAnnotation> metadata;
+  final Iterable<TypeHelper> helpers;
+
+  FieldContext(this.nullable, this.metadata, this.helpers);
+
+  @override
+  void addMember(String memberContent) {}
+
+  // TODO: Proper error message.
+  @override
+  String deserialize(DartType fieldType, String expression) => helpers
+      .map((h) => h.deserialize(fieldType, expression, this))
+      .firstWhere((r) => r != null,
+          orElse: () => throw UnsupportedTypeError(
+              fieldType, expression, 'Unable to detect helper.'));
+
+  @override
+  String serialize(DartType fieldType, String expression) => helpers
+      .map((h) => h.serialize(fieldType, expression, this))
+      .firstWhere((r) => r != null,
+          orElse: () => throw UnsupportedTypeError(
+              fieldType, expression, 'Unable to detect type.'));
+
+  // TODO: Add proper implementation.
+  @override
+  bool get useWrappers => false;
 }

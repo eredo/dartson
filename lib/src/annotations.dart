@@ -4,6 +4,8 @@ import 'dart:convert';
 
 /// Annotation class to mark a class as serializable. This is required
 /// if the dartson builder has to build an entity map for dart2js.
+@Deprecated('No longer necessary, as all entities need to be passed to the'
+    ' serializer.')
 class Entity {
   const Entity();
 }

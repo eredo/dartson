@@ -8,6 +8,8 @@ class MyClass extends BaseClass {
   @Property(ignore: true)
   bool ignored;
   double numDouble;
+  Uri uri;
+  DateTime dateTime;
 }
 
 class BaseClass {
