@@ -116,6 +116,7 @@ class _EntityGenerator {
   Method _buildEncoder(ClassElement classElement) {
     final obj = refer('obj');
     final block = BlockBuilder()
+      ..statements.add(Code('if (object == null) { return null; }'))
       ..addExpression(refer('Map<String, dynamic>', 'dart:core')
           .newInstance([]).assignFinal('obj'));
 
@@ -152,6 +153,7 @@ class _EntityGenerator {
 
   Method _buildDecoder(ClassElement classElement) {
     final block = BlockBuilder()
+      ..statements.add(Code('if (data == null) { return null; }'))
       ..addExpression(
           refer(classElement.name).newInstance([]).assignFinal('obj'));
 

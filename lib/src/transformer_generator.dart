@@ -33,8 +33,6 @@ class TransformerGenerator implements TypeHelper {
             v += _buildTransformer(t).accept(emitter).toString());
   }
 
-  String lookup(DartType targetType) => _transformerRef[targetType]?.name;
-
   Code _buildTransformer(_Transformer trans) =>
       refer(trans.element).constInstance([]).assignConst(trans.name).statement;
 

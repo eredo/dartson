@@ -8,6 +8,9 @@ part of serializer_test;
 
 const _transformer0 = const DateTimeParser();
 Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
+  if (object == null) {
+    return null;
+  }
   final obj = new Map<String, dynamic>();
   obj['name'] = object.name;
   obj['number'] = object.number;
@@ -23,6 +26,9 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
 }
 
 MyClass _MyClass$decoder(Map<String, dynamic> data, Dartson inst) {
+  if (data == null) {
+    return null;
+  }
   final obj = new MyClass();
   obj.name = data['name'] as String;
   obj.number = data['number'] as int;
