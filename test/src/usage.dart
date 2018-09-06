@@ -10,6 +10,6 @@ void usage() {
   final myObj = serializer.encode(myClass);
   print(myObj);
 
-  final backToObj = serializer.decode(myObj, MyClass);
+  final backToObj = serializer.decode<MyClass>(myObj);
   print(backToObj);
 }

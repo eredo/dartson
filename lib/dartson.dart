@@ -17,12 +17,12 @@ class Dartson {
     return entity.encoder(data, this);
   }
 
-  T decode<T>(Map<String, dynamic> data, Type type) {
-    if (!_entities.containsKey(type)) {
+  T decode<T>(Map<String, dynamic> data) {
+    if (!_entities.containsKey(T)) {
       throw DartsonEntityNotExistsException();
     }
 
-    final entity = _entities[type] as DartsonEntity<T>;
+    final entity = _entities[T] as DartsonEntity<T>;
     return entity.decoder(data, this);
   }
 }
