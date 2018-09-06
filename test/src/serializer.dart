@@ -16,4 +16,4 @@ part 'serializer.g.dart';
   ],
   transformers: [DateTimeParser],
 )
-final Dartson serializer = _serializer$dartson;
+final Dartson<Map<String, dynamic>> serializer = _serializer$dartson;

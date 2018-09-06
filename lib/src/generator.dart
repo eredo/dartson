@@ -31,6 +31,7 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
     final entities = annotation.objectValue.getField('entities').toListValue();
     final transformers =
         annotation.objectValue.getField('transformers').toListValue();
+    final codec = annotation.objectValue.getField('codec');
 
     final emitter = DartEmitter();
     final str = StringBuffer();
@@ -48,7 +49,7 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
           _EntityGenerator(classElement, trans, entityHelper).build(emitter));
     });
 
-    str.write(_DartsonGenerator(entities.toSet()).build(emitter));
+    str.write(_DartsonGenerator(entities.toSet(), codec).build(emitter));
     str.write(refer(_implementationIdentifier)
         .newInstance([])
         .assignFinal('_${element.name}$_serializerIdentifier')
@@ -62,8 +63,9 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
 
 class _DartsonGenerator {
   final Set<DartObject> objects;
+  final DartObject codec;
 
-  _DartsonGenerator(this.objects);
+  _DartsonGenerator(this.objects, this.codec);
 
   String build(DartEmitter emitter) {
     return _buildDartson(objects).accept(emitter).toString();
@@ -83,12 +85,23 @@ class _DartsonGenerator {
     final lookupMap = literalMap(mapValues, refer('Type', 'dart:core'),
         refer('DartsonEntity', 'package:dartson/dartson.dart'));
 
-    final constr = Constructor(
-        (mb) => mb..initializers.add(refer('super').call([lookupMap]).code));
+    String dartsonTypeArguments = 'Map<String, dynamic>';
+    if (!codec.isNull) {
+      final codecClass = codec.type.element as ClassElement;
+      dartsonTypeArguments = codecClass.supertype.typeArguments[1].displayName;
+    }
+
+    final constr = Constructor((mb) => mb
+      ..initializers.add(refer('super').call([
+        lookupMap
+      ], {
+        'codec': refer(codec.toSymbolValue()),
+      }).code));
 
     return Class((cb) => cb
       ..name = _implementationIdentifier
-      ..extend = refer('Dartson', 'package:dartson/dartson.dart')
+      ..extend = refer(
+          'Dartson<$dartsonTypeArguments>', 'package:dartson/dartson.dart')
       ..constructors.add(constr));
   }
 }

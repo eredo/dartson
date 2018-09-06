@@ -25,6 +25,7 @@ import 'package:dartson/dartson.dart';
 import 'package:some_dependency/some_class.dart';
 
 import 'my_class.dart';
+import 'some_class.dart';
 
 @Serializer(
   entities: [
@@ -32,7 +33,30 @@ import 'my_class.dart';
     SomeClass,
   ],
 )
-final Dartson serializer = _serializer$dartson;
+final Dartson<Map<String, dynamic>> serializer = _serializer$dartson;
+```
+
+Dartson encodes and decodes into a serializable Map (`Map<String, dynamic>`) by default. In order to
+encode and decode into a json string (in previous versions done by using `Dartson.JSON`) directly, use the `codec` 
+property within the `Serializer` annotation.
+
+```dart
+import 'dart:convert';
+
+import 'package:dartson/dartson.dart';
+import 'package:some_dependency/some_class.dart';
+
+import 'my_class.dart';
+import 'some_class.dart';
+
+@Serializer(
+  entities: [
+    MyClass,
+    SomeClass,
+  ],
+  codec: json,
+)
+final Dartson<String> serializer = _serializer$dartson;
 ```
 
 ## Writting custom TypeTransformers
