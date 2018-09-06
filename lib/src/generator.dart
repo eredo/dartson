@@ -10,6 +10,8 @@ import 'package:dart_style/dart_style.dart';
 import 'package:json_serializable/type_helper.dart';
 import 'package:json_serializable/src/type_helpers/value_helper.dart';
 import 'package:json_serializable/src/type_helpers/enum_helper.dart';
+import 'package:json_serializable/src/type_helpers/iterable_helper.dart';
+import 'package:json_serializable/src/type_helpers/map_helper.dart';
 
 import 'annotations.dart';
 import 'transformer_generator.dart';
@@ -104,6 +106,8 @@ class _EntityGenerator {
           ValueHelper(),
           UriHelper(),
           EnumHelper(),
+          IterableHelper(),
+          MapHelper(),
         ]);
 
   String build(DartEmitter emitter) {

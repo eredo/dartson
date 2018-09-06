@@ -21,6 +21,10 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
   obj['myEnum'] = _$MyEnumEnumMap[object.myEnum];
   obj['secondEnum'] = _$SecondEnumEnumMap[object.secondEnum];
   obj['subClass'] = _SubClass$encoder(object.subClass, inst);
+  obj['subClasses'] =
+      object.subClasses?.map((e) => _SubClass$encoder(e, inst))?.toList();
+  obj['complexMap'] =
+      object.complexMap?.map((k, e) => MapEntry(k, _SubClass$encoder(e, inst)));
   obj['inherited'] = object.inherited;
   obj['inheritName'] = object.inheritedRenamed;
   return obj;
@@ -41,6 +45,11 @@ MyClass _MyClass$decoder(Map<String, dynamic> data, Dartson inst) {
   obj.secondEnum =
       _$enumDecodeNullable(_$SecondEnumEnumMap, data['secondEnum']);
   obj.subClass = _SubClass$decoder(data['subClass'], inst);
+  obj.subClasses = (data['subClasses'] as List)
+      ?.map((e) => _SubClass$decoder(e, inst))
+      ?.toList();
+  obj.complexMap = (data['complexMap'] as Map<String, dynamic>)
+      ?.map((k, e) => MapEntry(k, _SubClass$decoder(e, inst)));
   obj.inherited = data['inherited'] as bool;
   obj.inheritedRenamed = data['inheritName'] as String;
   return obj;
@@ -80,6 +89,8 @@ Map<String, dynamic> _SubClass$encoder(SubClass object, Dartson inst) {
   }
   final obj = new Map<String, dynamic>();
   obj['name'] = object.name;
+  obj['aliases'] = object.aliases;
+  obj['simpleMap'] = object.simpleMap;
   return obj;
 }
 
@@ -89,6 +100,9 @@ SubClass _SubClass$decoder(Map<String, dynamic> data, Dartson inst) {
   }
   final obj = new SubClass();
   obj.name = data['name'] as String;
+  obj.aliases = (data['aliases'] as List)?.map((e) => e as String)?.toList();
+  obj.simpleMap = (data['simpleMap'] as Map<String, dynamic>)
+      ?.map((k, e) => MapEntry(k, (e as num)?.toDouble()));
   return obj;
 }
 

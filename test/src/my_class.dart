@@ -18,6 +18,8 @@ class MyClass extends BaseClass {
   MyEnum myEnum;
   SecondEnum secondEnum;
   SubClass subClass;
+  List<SubClass> subClasses;
+  Map<String, SubClass> complexMap;
 }
 
 class BaseClass {
