@@ -9,7 +9,7 @@ class TransformerGenerator implements TypeHelper {
   final Map<DartType, _Transformer> _transformerRef = {};
 
   TransformerGenerator(this._transformers) {
-    _transformers.forEach((obj) {
+    _transformers?.forEach((obj) {
       final classElement = obj.toTypeValue().element as ClassElement;
       final serialize = classElement.methods.firstWhere(
           (m) => m.name == 'encode',

@@ -1,12 +1,31 @@
 import 'package:dartson/dartson.dart';
 
-class Person {
-  String firstName;
-  String lastName;
+import 'sub_class.dart';
 
-  @Property(name: 'isEmployed')
-  bool employed;
+enum MyEnum { firstValue, secondValue }
+enum SecondEnum { has, nothing }
 
+class MyClass extends BaseClass {
+  String name;
+  int number;
+  @Property(name: 'boolean')
+  bool hasBoolean;
   @Property(ignore: true)
-  bool changed;
+  bool ignored;
+  double numDouble;
+  Uri uri;
+  DateTime dateTime;
+  MyEnum myEnum;
+  SecondEnum secondEnum;
+  SubClass subClass;
+  List<SubClass> subClasses;
+  Map<String, SubClass> complexMap;
+}
+
+class BaseClass {
+  bool inherited;
+  @Property(name: 'inheritName')
+  String inheritedRenamed;
+  @Property(ignore: true)
+  String inheritedIgnored;
 }
