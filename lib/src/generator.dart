@@ -51,7 +51,7 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
     str.write(_DartsonGenerator(entities.toSet()).build(emitter));
     str.write(refer(_implementationIdentifier)
         .newInstance([])
-        .assignFinal('${element.name}$_serializerIdentifier')
+        .assignFinal('_${element.name}$_serializerIdentifier')
         .statement
         .accept(emitter));
 

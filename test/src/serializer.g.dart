@@ -116,4 +116,4 @@ class _Dartson$impl extends Dartson {
         });
 }
 
-final serializer$dartson = new _Dartson$impl();
+final _serializer$dartson = new _Dartson$impl();

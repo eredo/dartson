@@ -16,4 +16,4 @@ part 'serializer.g.dart';
   ],
   transformers: [DateTimeParser],
 )
-final Dartson serializer = serializer$dartson;
+final Dartson serializer = _serializer$dartson;

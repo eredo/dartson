@@ -1,11 +1,14 @@
 # Changelog
-## 1.0.0-alpha (TBD)
+## 1.0.0-alpha (09/06/2018)
 - Support dart 2.0 with `build_runner`
+- Add enum support (thanks to `json_serializable`)
 
 **Breaking changes**
  
 - `@Entity` is deprecated and ignored
 - See `README.md` for how to use dartson `1.0.0`
+- Reflection implementation is currently not supported 
+  (still under evaluation if it will be supported in the future)
 
 ## 0.2.6 (10/05/2015)
 - Bump dependency versions in pubspec

@@ -32,7 +32,7 @@ import 'my_class.dart';
     SomeClass,
   ],
 )
-final Dartson serializer = serializer$dartson;
+final Dartson serializer = _serializer$dartson;
 ```
 
 ## Writting custom TypeTransformers
@@ -41,9 +41,11 @@ Transformers are used to encode / decode none serializable types that shouldn't 
 ```dart
 
 /// A simple DateTime transformer which uses the toString() method.
-class DateTimeParser extends TypeTransformer<String, DateTime> {
+class DateTimeParser implements TypeTransformer<String, DateTime> {
+  // Make sure to add a constant constructor, because dartson will initiate all tranformers
+  // as constant to improve dart2js compilation.
+  const DateTimeParser();
   DateTime decode(String value) => DateTime.parse(value);
-
   String encode(DateTime value) => value.toString();
 }
 ```
@@ -64,5 +66,22 @@ import 'my_class.dart';
     DateTimeParser,
   ],
 )
-final Dartson serializer = serializer$dartson;
+final Dartson serializer = _serializer$dartson;
 ```
+
+## Roadmap for 1.0.0 alpha/beta
+
+- First alpha release evaluates and tests the reuse of `json_serializable` 
+  (refactorings during the alpha/beta will be necessary)
+- Additional functionality from proposals will be ported
+- Looking for feedback in regards of usability from users
+- Further benchmarking of potential bottlenecks because of single point of  
+  the builder
+
+## Further features planned
+
+- See doc/proposal for general features
+- Add tool to generate serializer.dart based on `serializer.decode<T>()` and
+  `serializer.encode(T)` usage
+- Add analyzer plugin to detect potential issues of used entities which are not 
+  present in the serializer definition
