@@ -2,10 +2,6 @@ language: dart
 dart:
   - stable
   - dev
-dart_task:
-  - test
-  - dartfmt
-  - dartanalyzer
 script: ./tool/travis.sh
 sudo: false
 cache:
