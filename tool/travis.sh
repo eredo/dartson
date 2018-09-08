@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
 
-dart test/dartson_test.dart
-dart test/transformer_test.dart
+pub run dart_coveralls report \
+  --retry 2 \
+  --exclude-test-files \
+  --throw-on-error \
+  --throw-on-connectivity-error \
+  --debug test/test_all.dart

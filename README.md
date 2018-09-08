@@ -1,9 +1,10 @@
 # dartson
 [![Pub Version](https://img.shields.io/pub/v/dartson.svg)](https://pub.dartlang.org/packages/dartson)
 [![Build Status](https://travis-ci.org/eredo/dartson.svg?branch=master)](https://travis-ci.org/eredo/dartson)
+[![Coverage Status](https://coveralls.io/repos/github/eredo/dartson/badge.svg)](https://coveralls.io/github/eredo/dartson)
 
 Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean
-of `fromJSON` and `toJSON` functions by providing a builder which provides the serialization mappings.
+of `fromJSON` and `toJSON` functions by providing a builder which generates the serialization methods.
 
 ## Usage
 
@@ -17,8 +18,8 @@ dev_dependencies:
   build_runner: ^0.10.0
 ```
 
-Dartson is using a central serializer instead of generated serializers for each object, therefore
-create a central file which refers the objects that need to be serialized:
+Dartson is using a central serializer instead of serializers for each object, therefore create a 
+central file which refers the objects that need to be serialized:
 
 ```dart
 import 'package:dartson/dartson.dart';
