@@ -2,9 +2,9 @@
 
 set -e
 
-echo -e '\033[1mTASK: Fetching dependencies [pub get]\033[22m'
-echo -e 'pub get'
-pub get
+echo -e '\033[1mTASK: Fetching dependencies for examples/ [pub get]\033[22m'
+echo -e '(cd example && pub get)'
+(cd example && pub get)
 
 echo -e '\033[1mTASK: Dart Analyzer [analyzer]\033[22m'
 echo -e 'dartanalyzer --fatal-warnings .'
