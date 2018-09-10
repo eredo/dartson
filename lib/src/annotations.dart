@@ -1,6 +1,4 @@
-library dartson.annotations;
-
-import 'dart:convert';
+import 'package:meta/meta.dart';
 
 /// Annotation class to mark a class as serializable. This is required
 /// if the dartson builder has to build an entity map for dart2js.
@@ -16,14 +14,28 @@ class Property {
   final String name;
 
   const Property({this.ignore = false, this.name});
-
-  String toString() => "DartsonProperty: Name: $name , Ignore: $ignore";
 }
 
+/// Defines the generation of a serializer. Assign the variable name as private
+/// with a suffix "$dartson" to the annotated variable.
+///
+///     @Serializer(entities: [MyClass])
+///     final serializer = _serializer$dartson;
+///
 class Serializer {
+  /// A list of entities which will be serialized by the [Serializer].
+  ///
+  /// Note: All classes used within an entity must be added to this list or
+  /// have a transformer added to the [transformers].
   final List<Type> entities;
-  final List<Type> transformers;
-  final Codec codec;
 
-  const Serializer({this.entities, this.codec, this.transformers});
+  /// A list of transformers which will be used to serializer classes or types
+  /// that are not present in [entities] or can be serialized by default.
+  ///
+  /// All types in this list need to implement [TypeTransformer] providing both
+  /// of the generic type definitions. Otherwise the builder will fail due to
+  /// an unknown type.
+  final List<Type> transformers;
+
+  const Serializer({@required this.entities, this.transformers});
 }

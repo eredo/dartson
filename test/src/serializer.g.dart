@@ -113,7 +113,7 @@ class _Dartson$impl extends Dartson<Map<String, dynamic>> {
               const DartsonEntity<MyClass>(_MyClass$encoder, _MyClass$decoder),
           SubClass: const DartsonEntity<SubClass>(
               _SubClass$encoder, _SubClass$decoder)
-        }, codec: null);
+        });
 }
 
 final _serializer$dartson = new _Dartson$impl();

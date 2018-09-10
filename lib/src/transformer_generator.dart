@@ -4,6 +4,8 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:json_serializable/type_helper.dart';
 
+import 'exceptions.dart';
+
 class TransformerGenerator implements TypeHelper {
   final List<DartObject> _transformers;
   final Map<DartType, _Transformer> _transformerRef = {};
@@ -13,10 +15,10 @@ class TransformerGenerator implements TypeHelper {
       final classElement = obj.toTypeValue().element as ClassElement;
       final serialize = classElement.methods.firstWhere(
           (m) => m.name == 'encode',
-          orElse: () => throw NoSerializeMethodOnTypeTransformer());
+          orElse: () => throw MissingEncodeMethodException(classElement.name));
       final deserialize = classElement.methods.firstWhere(
           (m) => m.name == 'decode',
-          orElse: () => throw NoDeserializeMethodOnTypeTransformer());
+          orElse: () => throw MissingDecodeMethodException(classElement.name));
 
       final targetType = deserialize.returnType;
       final inputType = serialize.returnType;
@@ -44,7 +46,8 @@ class TransformerGenerator implements TypeHelper {
       return null;
     }
 
-    return '${transformer.name}.decode(${expression} as ${transformer.inputType.displayName})';
+    return '${transformer.name}.decode(${expression} as '
+        '${transformer.inputType.displayName})';
   }
 
   @override
@@ -65,10 +68,3 @@ class _Transformer {
 
   _Transformer(this.targetType, this.inputType, this.name, this.element);
 }
-
-// TODO: Move to exceptions and add proper messages
-class NoSerializeMethodOnTypeTransformer implements Exception {}
-
-class NoDeserializeMethodOnTypeTransformer implements Exception {}
-
-class InvalidTransformerType implements Exception {}

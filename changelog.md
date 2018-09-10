@@ -1,4 +1,17 @@
 # Changelog
+
+## 1.0.0-alpha+1 (09/10/2018)
+
+- Add `extend` method to `Dartson` to extend a serializer
+- Fix bug where `codec` is always set to null
+
+**Breaking changes**
+
+- Codec usage is now different, please see `README.md`
+- `DartsonEntityNotExistsException` renamed to `UnknownEntityException`
+- `NoDeserializeMethodOnTypeTransformer` renamed to `MissingDecodeMethodException`
+- `NoSerializeMethodOnTypeTransformer` renamed to `MissingEncodeMethodException`
+
 ## 1.0.0-alpha (09/06/2018)
 - Support dart 2.0 with `build_runner`
 - Add enum support (thanks to `json_serializable`)

@@ -31,8 +31,6 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
     final entities = annotation.objectValue.getField('entities').toListValue();
     final transformers =
         annotation.objectValue.getField('transformers').toListValue();
-    final codec = annotation.objectValue.getField('codec');
-
     final emitter = DartEmitter();
     final str = StringBuffer();
     final trans = TransformerGenerator(transformers);
@@ -42,34 +40,30 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
     str.write(trans.build(emitter));
 
     entities.forEach((e) {
-      final el = e.toTypeValue();
-      final classElement = el.element as ClassElement;
-
+      final classElement = e.toTypeValue().element as ClassElement;
       str.write(
           _EntityGenerator(classElement, trans, entityHelper).build(emitter));
     });
 
-    str.write(_DartsonGenerator(entities.toSet(), codec).build(emitter));
+    str.write(_DartsonGenerator(entities.toSet()).build(emitter));
     str.write(refer(_implementationIdentifier)
         .newInstance([])
         .assignFinal('_${element.name}$_serializerIdentifier')
         .statement
         .accept(emitter));
 
-    final formatter = new DartFormatter();
+    final formatter = DartFormatter();
     return formatter.format(str.toString());
   }
 }
 
 class _DartsonGenerator {
   final Set<DartObject> objects;
-  final DartObject codec;
 
-  _DartsonGenerator(this.objects, this.codec);
+  _DartsonGenerator(this.objects);
 
-  String build(DartEmitter emitter) {
-    return _buildDartson(objects).accept(emitter).toString();
-  }
+  String build(DartEmitter emitter) =>
+      _buildDartson(objects).accept(emitter).toString();
 
   Spec _buildDartson(Iterable<DartObject> objects) {
     final mapValues = <Object, Object>{};
@@ -86,17 +80,9 @@ class _DartsonGenerator {
         refer('DartsonEntity', 'package:dartson/dartson.dart'));
 
     String dartsonTypeArguments = 'Map<String, dynamic>';
-    if (!codec.isNull) {
-      final codecClass = codec.type.element as ClassElement;
-      dartsonTypeArguments = codecClass.supertype.typeArguments[1].displayName;
-    }
 
-    final constr = Constructor((mb) => mb
-      ..initializers.add(refer('super').call([
-        lookupMap
-      ], {
-        'codec': refer(codec.toSymbolValue()),
-      }).code));
+    final constr = Constructor(
+        (mb) => mb..initializers.add(refer('super').call([lookupMap]).code));
 
     return Class((cb) => cb
       ..name = _implementationIdentifier

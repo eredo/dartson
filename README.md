@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/eredo/dartson.svg?branch=master)](https://travis-ci.org/eredo/dartson)
 [![Coverage Status](https://coveralls.io/repos/github/eredo/dartson/badge.svg)](https://coveralls.io/github/eredo/dartson)
 
+**Dartson 1.0.0 is currently in alpha. The public API might be subject to change.**
+
 Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean
 of `fromJSON` and `toJSON` functions by providing a builder which generates the serialization methods.
 
@@ -26,7 +28,6 @@ import 'package:dartson/dartson.dart';
 import 'package:some_dependency/some_class.dart';
 
 import 'my_class.dart';
-import 'some_class.dart';
 
 @Serializer(
   entities: [
@@ -38,8 +39,8 @@ final Dartson<Map<String, dynamic>> serializer = _serializer$dartson;
 ```
 
 Dartson encodes and decodes into a serializable Map (`Map<String, dynamic>`) by default. In order to
-encode and decode into a json string (in previous versions done by using `Dartson.JSON`) directly, use the `codec` 
-property within the `Serializer` annotation.
+encode and decode into a json string (in previous versions done by using `Dartson.JSON`) directly, call the
+`useCodec` method on the generated `Dartson` instance, which creates a new instance using the provided codec.
 
 ```dart
 import 'dart:convert';
@@ -48,17 +49,58 @@ import 'package:dartson/dartson.dart';
 import 'package:some_dependency/some_class.dart';
 
 import 'my_class.dart';
-import 'some_class.dart';
 
 @Serializer(
   entities: [
     MyClass,
     SomeClass,
   ],
-  codec: json,
 )
-final Dartson<String> serializer = _serializer$dartson;
+final Dartson<String> serializer = _serializer$dartson.useCodec(json);
 ```
+
+### Extending the serializer
+
+Dartson supports extending serializers to provide a module approach. This is necessary to support functionality
+like deferred loading. This also may improve build times, so when changing an entity only a part of the 
+serializer is regenerated.
+
+**serializer_init.dart**
+```dart
+import 'dart:convert';
+
+import 'package:dartson/dartson.dart';
+import 'package:some_dependency/some_class.dart';
+
+import 'my_class.dart';
+
+@Serializer(
+  entities: [
+    MyClass,
+    SomeClass,
+  ],
+)
+final Dartson<String> serializer = _serializer$dartson.useCodec(json);
+```
+
+**serializer_second.dart**
+```dart
+import 'package:dartson/dartson.dart';
+
+import 'other_class.dart';
+import 'serializer_init.dart' as fs;
+
+@Serializer(
+  entities: [
+    OtherClass,
+  ],
+)
+final Dartson<String> serializer = fs.serializer.extend(_serializer$dartson);
+```
+
+Notice that `extend` provides a completely new instance of `Dartson`. Also the entities provided by the
+serializer on which `extend` was called can be overwritten by the entities used in the serializer passed
+as the argument (in this case: `_serializer$dartson` entities may overwrite `fs.serializer` entities). 
 
 ## Writting custom TypeTransformers
 Transformers are used to encode / decode none serializable types that shouldn't be treated  as objects / lists (for example DateTime).

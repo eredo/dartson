@@ -106,7 +106,7 @@ SubClass _SubClass$decoder(Map<String, dynamic> data, Dartson inst) {
   return obj;
 }
 
-class _Dartson$impl extends Dartson {
+class _Dartson$impl extends Dartson<Map<String, dynamic>> {
   _Dartson$impl()
       : super(<Type, DartsonEntity>{
           MyClass:
