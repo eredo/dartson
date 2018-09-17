@@ -1,7 +1,7 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/src/dart/resolver/inheritance_manager.dart';
-import 'package:dartson/dartson.dart';
 import 'package:source_gen/source_gen.dart';
+import 'package:dartson/dartson.dart';
 
 Property propertyAnnotation(FieldElement element) {
   final annotations = TypeChecker.fromRuntime(Property).annotationsOf(element);

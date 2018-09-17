@@ -16,7 +16,7 @@ class EntityTypeHelper implements TypeHelper {
       return null;
     }
 
-    return '_${entities[target].displayName}$decodeMethodIdentifier($expression, inst)';
+    return '${decodeMethod(entities[target])}($expression, inst)';
   }
 
   @override
@@ -27,6 +27,6 @@ class EntityTypeHelper implements TypeHelper {
       return null;
     }
 
-    return '_${entities[target].displayName}$encodeMethodIdentifier($expression, inst)';
+    return '${encodeMethod(entities[target])}($expression, inst)';
   }
 }

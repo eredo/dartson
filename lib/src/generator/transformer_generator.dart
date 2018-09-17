@@ -3,7 +3,7 @@ import 'package:analyzer/dart/element/type.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:json_serializable/type_helper.dart';
 
-import 'exceptions.dart';
+import '../exceptions.dart';
 
 class TransformerGenerator implements TypeHelper {
   final Iterable<ClassElement> _transformers;
@@ -44,7 +44,7 @@ class TransformerGenerator implements TypeHelper {
       return null;
     }
 
-    return '${transformer.name}.decode(${expression} as '
+    return '${transformer.name}.decode($expression as '
         '${transformer.inputType.displayName})';
   }
 
@@ -56,7 +56,7 @@ class TransformerGenerator implements TypeHelper {
       return null;
     }
 
-    return '${transformer.name}.encode(${expression})';
+    return '${transformer.name}.encode($expression)';
   }
 }
 

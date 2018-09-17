@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-alpha+3
+
+**Breaking changes**
+- `DateTimeParser` is deprecated. The default is now the `json_serializable` implementation and it's no longer necessary
+  to register a transformer at all.
+
 ## 1.0.0-alpha+2 (09/17/2018)
 
 - Add replacement functionality

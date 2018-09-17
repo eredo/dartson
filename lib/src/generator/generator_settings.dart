@@ -1,6 +1,7 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:source_gen/source_gen.dart';
 
+/// Helper class to fetch all [Serializer] definitions within the generator.
 class GeneratorSettings {
   final Map<ClassElement, ClassElement> entities;
   final Map<ClassElement, ClassElement> replacements;
@@ -13,12 +14,13 @@ class GeneratorSettings {
 
     final entityMap = <ClassElement, ClassElement>{}
       ..addAll(Map<ClassElement, ClassElement>.fromIterable(
-          _fromReader(reader, 'entities'),
-          key: (v) => v,
-          value: (v) => v))
+        _fromReader(reader, 'entities'),
+        key: (v) => v,
+        value: (v) => v,
+      ))
       ..addAll(replacements);
 
-    return new GeneratorSettings._(
+    return GeneratorSettings._(
       entityMap,
       _fromReader(reader, 'transformers'),
       replacements,

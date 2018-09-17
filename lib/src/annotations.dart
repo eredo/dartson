@@ -19,8 +19,12 @@ class Property {
 /// Defines the generation of a serializer. Assign the variable name as private
 /// with a suffix "$dartson" to the annotated variable.
 ///
-///     @Serializer(entities: [MyClass])
-///     final serializer = _serializer$dartson;
+///     @Serializer(
+///       entities: [MyClass],
+///       replacements: {MyInterface: MyImplementation},
+///       transformers: [MyCustomTransformer],
+///     )
+///     final Dartson<String> serializer = _serializer$dartson.useCodec(json);
 ///
 class Serializer {
   /// A list of entities which will be serialized by the [Serializer].

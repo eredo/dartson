@@ -59,6 +59,77 @@ import 'my_class.dart';
 final Dartson<String> serializer = _serializer$dartson.useCodec(json);
 ```
 
+
+### Encoding / decoding lists
+
+As of dartson `>1.0.0` there are specific `encodeList` and `decodeList` methods. Because of type restrictions 
+`encodeList` returns an `Object` and `decodeList` expects an `Object`. This should not cause any further actions when
+using `json` codec, however when working with the default serializer without any Codec, than a cast to 
+`List<Map<String, dynamic>>` might be necessary when using the `encodeList` result.
+
+```dart
+main() {
+  final result = serializer.encodeList([
+	MyClass()..name = 'test1',
+	MyClass()..name = 'test2',
+  ]) as List<Map<String, dynamic>>;
+
+  expect(result, allOf(isList, hasLength(2)));
+  expect(result[0]['name'], 'test1');
+  expect(result[1]['name'], 'test2');
+}
+```
+
+### Replacing entities
+
+Sometimes entities are automatically generated and as such cannot contain any handwritten code, which could provide 
+further logic and reduce complexity. This is where the `replacement` feature of dartson can help.
+
+Here an example of an entity called `Money` which is replaced using `MoneyImpl` for replacing the operators.
+
+```dart
+import 'package:dartson/dartson.dart';
+import 'package:dartson/transformers/date_time.dart';
+
+// Imagine Money and Product couldn't be touched.
+class Money {
+  double net;
+  double gross;
+}
+
+class Product {
+  Money price;
+  String name;
+}
+
+
+class MoneyImpl extends Money {
+  operator +(dynamic ob) {
+    if (obj is! Money) {
+      throw TypeError();
+    }
+    
+    net += ob.net;
+    gross += ob.gross;
+  }
+}
+
+
+@Serializer(
+  entities: [
+    Money,
+    Product,
+  ],
+  replacements: {
+    Money: MoneyImpl,
+  },
+  transformers: [
+    DateTimeParser,
+  ],
+)
+final Dartson serializer = _serializer$dartson;
+```
+
 ### Extending the serializer
 
 Dartson supports extending serializers to provide a module approach. This is necessary to support functionality
@@ -130,76 +201,6 @@ import 'my_class.dart';
   entities: [
     MyClass,
   ],
-  transformers: [
-    DateTimeParser,
-  ],
-)
-final Dartson serializer = _serializer$dartson;
-```
-
-## Encoding / decoding lists
-
-As of dartson `>1.0.0` there are specific `encodeList` and `decodeList` methods. Because of type restrictions 
-`encodeList` returns an `Object` and `decodeList` expects an `Object`. This should not cause any further actions when
-using `json` codec, however when working with the default serializer without any Codec, than a cast to 
-`List<Map<String, dynamic>>` might be necessary when using the `encodeList` result.
-
-```dart
-main() {
-  final result = serializer.encodeList([
-	MyClass()..name = 'test1',
-	MyClass()..name = 'test2',
-  ]) as List<Map<String, dynamic>>;
-
-  expect(result, allOf(isList, hasLength(2)));
-  expect(result[0]['name'], 'test1');
-  expect(result[1]['name'], 'test2');
-}
-```
-
-## Replacing entities
-
-Sometimes entities are automatically generated and as such cannot contain any handwritten code, which could provide 
-further logic and reduce complexity. This is where the `replacement` feature of dartson can help.
-
-Here an example of an entity called `Money` which is replaced using `MoneyImpl` for replacing the operators.
-
-```dart
-import 'package:dartson/dartson.dart';
-import 'package:dartson/transformers/date_time.dart';
-
-// Imagine Money and Product couldn't be touched.
-class Money {
-  double net;
-  double gross;
-}
-
-class Product {
-  Money price;
-  String name;
-}
-
-
-class MoneyImpl extends Money {
-  operator +(dynamic ob) {
-    if (obj is! Money) {
-      throw TypeError();
-    }
-    
-    net += ob.net;
-    gross += ob.gross;
-  }
-}
-
-
-@Serializer(
-  entities: [
-    Money,
-    Product,
-  ],
-  replacements: {
-    Money: MoneyImpl,
-  },
   transformers: [
     DateTimeParser,
   ],
