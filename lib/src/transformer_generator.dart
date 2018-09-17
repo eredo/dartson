@@ -1,4 +1,3 @@
-import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:code_builder/code_builder.dart';
@@ -7,12 +6,11 @@ import 'package:json_serializable/type_helper.dart';
 import 'exceptions.dart';
 
 class TransformerGenerator implements TypeHelper {
-  final List<DartObject> _transformers;
+  final Iterable<ClassElement> _transformers;
   final Map<DartType, _Transformer> _transformerRef = {};
 
   TransformerGenerator(this._transformers) {
-    _transformers?.forEach((obj) {
-      final classElement = obj.toTypeValue().element as ClassElement;
+    _transformers?.forEach((classElement) {
       final serialize = classElement.methods.firstWhere(
           (m) => m.name == 'encode',
           orElse: () => throw MissingEncodeMethodException(classElement.name));

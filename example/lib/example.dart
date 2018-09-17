@@ -1,4 +1,4 @@
-import 'package:dartson_test/serializer.dart';
+import 'serializer.dart';
 
 void main() {
   print(serializer.encode(MyClass()..name = 'test'));

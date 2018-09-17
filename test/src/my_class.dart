@@ -1,6 +1,7 @@
 import 'package:dartson/dartson.dart';
 
 import 'sub_class.dart';
+import 'my_impl.dart';
 
 enum MyEnum { firstValue, secondValue }
 enum SecondEnum { has, nothing }
@@ -20,6 +21,7 @@ class MyClass extends BaseClass {
   SubClass subClass;
   List<SubClass> subClasses;
   Map<String, SubClass> complexMap;
+  MyAbstr replacement;
 }
 
 class BaseClass {

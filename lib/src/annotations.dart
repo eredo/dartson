@@ -37,5 +37,10 @@ class Serializer {
   /// an unknown type.
   final List<Type> transformers;
 
-  const Serializer({@required this.entities, this.transformers});
+  /// A map which defines replacements of classes, the key defines the targets
+  /// for replacement and the value the implementations which be used instead.
+  final Map<Type, Type> replacements;
+
+  const Serializer(
+      {@required this.entities, this.transformers, this.replacements});
 }

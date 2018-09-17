@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:code_builder/code_builder.dart';
@@ -16,11 +15,9 @@ import 'package:json_serializable/src/type_helpers/map_helper.dart';
 import 'annotations.dart';
 import 'transformer_generator.dart';
 import 'utils.dart';
-
-const _encodeMethodIdentifier = r'$encoder';
-const _decodeMethodIdentifier = r'$decoder';
-const _serializerIdentifier = r'$dartson';
-const _implementationIdentifier = r'_Dartson$impl';
+import 'generator_settings.dart';
+import 'identifier.dart';
+import 'entity_type_helper.dart';
 
 // TODO: Properly separate the generators.
 
@@ -28,27 +25,22 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
   @override
   FutureOr<String> generateForAnnotatedElement(
       Element element, ConstantReader annotation, BuildStep buildStep) {
-    final entities = annotation.objectValue.getField('entities').toListValue();
-    final transformers =
-        annotation.objectValue.getField('transformers').toListValue();
+    final settings = GeneratorSettings.fromConstant(annotation);
+    final trans = TransformerGenerator(settings.transformers);
+    final entityHelper = EntityTypeHelper(settings.entities);
+
     final emitter = DartEmitter();
     final str = StringBuffer();
-    final trans = TransformerGenerator(transformers);
-    final entityHelper =
-        ExistingEntityHelper(entities.map((e) => e.toTypeValue()).toList());
 
     str.write(trans.build(emitter));
+    str.writeAll(settings.entities.values
+        .map((e) => _EntityGenerator(e, trans, entityHelper).build(emitter)));
 
-    entities.forEach((e) {
-      final classElement = e.toTypeValue().element as ClassElement;
-      str.write(
-          _EntityGenerator(classElement, trans, entityHelper).build(emitter));
-    });
-
-    str.write(_DartsonGenerator(entities.toSet()).build(emitter));
-    str.write(refer(_implementationIdentifier)
+    str.write(
+        _DartsonGenerator(settings.entities.values.toSet()).build(emitter));
+    str.write(refer(implementationIdentifier)
         .newInstance([])
-        .assignFinal('_${element.name}$_serializerIdentifier')
+        .assignFinal('_${element.name}$serializerIdentifier')
         .statement
         .accept(emitter));
 
@@ -58,23 +50,23 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
 }
 
 class _DartsonGenerator {
-  final Set<DartObject> objects;
+  final Set<ClassElement> objects;
 
   _DartsonGenerator(this.objects);
 
   String build(DartEmitter emitter) =>
-      _buildDartson(objects).accept(emitter).toString();
+      _buildDartson().accept(emitter).toString();
 
-  Spec _buildDartson(Iterable<DartObject> objects) {
+  Spec _buildDartson() {
     final mapValues = <Object, Object>{};
 
-    objects.map((obj) => obj.toTypeValue()).forEach(
-        (t) => mapValues[refer(t.name)] = refer('DartsonEntity').constInstance([
-              refer('_${t.name}$_encodeMethodIdentifier'),
-              refer('_${t.name}$_decodeMethodIdentifier'),
-            ], {}, [
-              refer(t.name)
-            ]));
+    objects.forEach((t) =>
+        mapValues[refer(t.displayName)] = refer('DartsonEntity').constInstance([
+          refer('_${t.displayName}$encodeMethodIdentifier'),
+          refer('_${t.displayName}$decodeMethodIdentifier'),
+        ], {}, [
+          refer(t.displayName)
+        ]));
 
     final lookupMap = literalMap(mapValues, refer('Type', 'dart:core'),
         refer('DartsonEntity', 'package:dartson/dartson.dart'));
@@ -85,7 +77,7 @@ class _DartsonGenerator {
         (mb) => mb..initializers.add(refer('super').call([lookupMap]).code));
 
     return Class((cb) => cb
-      ..name = _implementationIdentifier
+      ..name = implementationIdentifier
       ..extend = refer(
           'Dartson<$dartsonTypeArguments>', 'package:dartson/dartson.dart')
       ..constructors.add(constr));
@@ -99,7 +91,7 @@ class _EntityGenerator {
   final _fieldContexts = <FieldContext>[];
 
   _EntityGenerator(this._element, TransformerGenerator _transformers,
-      ExistingEntityHelper entities)
+      EntityTypeHelper entities)
       : _fields = sortedFieldSet(_element),
         _helpers = <TypeHelper>[_transformers, entities].followedBy([
           ValueHelper(),
@@ -145,7 +137,7 @@ class _EntityGenerator {
     block.addExpression(obj.returned);
 
     return Method((b) => b
-      ..name = '_${classElement.name}$_encodeMethodIdentifier'
+      ..name = '_${classElement.name}$encodeMethodIdentifier'
       ..returns = refer('Map<String, dynamic>')
       ..requiredParameters.addAll([
         Parameter((pb) => pb
@@ -180,7 +172,7 @@ class _EntityGenerator {
     block.addExpression(refer('obj').returned);
 
     return Method((b) => b
-      ..name = '_${classElement.name}$_decodeMethodIdentifier'
+      ..name = '_${classElement.name}$decodeMethodIdentifier'
       ..returns = refer(classElement.name)
       ..requiredParameters.addAll([
         Parameter((pb) => pb
@@ -191,31 +183,6 @@ class _EntityGenerator {
           ..type = refer('Dartson'))
       ])
       ..body = block.build());
-  }
-}
-
-class ExistingEntityHelper implements TypeHelper {
-  final List<DartType> entities;
-  ExistingEntityHelper(this.entities);
-
-  @override
-  String deserialize(
-      DartType targetType, String expression, DeserializeContext context) {
-    if (!entities.contains(targetType)) {
-      return null;
-    }
-
-    return '_${targetType.displayName}$_decodeMethodIdentifier($expression, inst)';
-  }
-
-  @override
-  String serialize(
-      DartType targetType, String expression, SerializeContext context) {
-    if (!entities.contains(targetType)) {
-      return null;
-    }
-
-    return '_${targetType.displayName}$_encodeMethodIdentifier($expression, inst)';
   }
 }
 

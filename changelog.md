@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0-alpha+2 (09/17/2018)
+
+- Add replacement functionality
+- Add `encodeList` and `decodeList` for de/serializing lists directly
+- Fix #51 by adding latest version constrain
+
 ## 1.0.0-alpha+1 (09/10/2018)
 
 - Add `extend` method to `Dartson` to extend a serializer
