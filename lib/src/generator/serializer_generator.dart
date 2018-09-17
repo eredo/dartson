@@ -3,10 +3,18 @@ import 'package:code_builder/code_builder.dart';
 
 import 'identifier.dart';
 
+/// Generator which initiates the [Dartson] instance passing the map of
+/// entities and assigning it to the serializer value adding `$dartson` suffix.
+///
+/// **Output:**
+///
+///     final _serializer$dartson = new Dartson<Map<String, dynamic>>({/*...*/});
+///
 class DartsonGenerator {
-  final Set<ClassElement> objects;
+  final Set<ClassElement> _objects;
+  final Element _element;
 
-  DartsonGenerator(this.objects);
+  DartsonGenerator(this._objects, this._element);
 
   String build(DartEmitter emitter) =>
       _buildDartson().accept(emitter).toString();
@@ -14,7 +22,7 @@ class DartsonGenerator {
   Spec _buildDartson() {
     final mapValues = <Object, Object>{};
 
-    objects.forEach((t) => mapValues[refer(t.displayName)] =
+    _objects.forEach((t) => mapValues[refer(t.displayName)] =
             refer('DartsonEntity', dartsonPackage).constInstance([
           refer(encodeMethod(t)),
           refer(decodeMethod(t)),
@@ -25,14 +33,9 @@ class DartsonGenerator {
     final lookupMap = literalMap(mapValues, refer('Type', 'dart:core'),
         refer('DartsonEntity', dartsonPackage));
 
-    String dartsonTypeArguments = 'Map<String, dynamic>';
-
-    final constr = Constructor(
-        (mb) => mb..initializers.add(refer('super').call([lookupMap]).code));
-
-    return Class((cb) => cb
-      ..name = implementationIdentifier
-      ..extend = refer('Dartson<$dartsonTypeArguments>', dartsonPackage)
-      ..constructors.add(constr));
+    return refer('Dartson<Map<String, dynamic>>', dartsonPackage)
+        .newInstance([lookupMap])
+        .assignFinal('_${_element.displayName}$serializerIdentifier')
+        .statement;
   }
 }

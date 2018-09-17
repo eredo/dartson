@@ -5,6 +5,7 @@
 **Breaking changes**
 - `DateTimeParser` is deprecated. The default is now the `json_serializable` implementation and it's no longer necessary
   to register a transformer at all.
+- Generator no longer create `_Dartson$impl` class instance and instead calls `Dartson` constructor directly 
 
 ## 1.0.0-alpha+2 (09/17/2018)
 

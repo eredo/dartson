@@ -34,12 +34,12 @@ class EntityGenerator {
         ]);
 
   String build(DartEmitter emitter) => (StringBuffer()
-        ..write(_buildEncoder(_element).accept(emitter))
-        ..write(_buildDecoder(_element).accept(emitter))
+        ..write(_buildEncoder().accept(emitter))
+        ..write(_buildDecoder().accept(emitter))
         ..writeAll(_fieldContexts.expand((f) => f.members).toSet()))
       .toString();
 
-  Method _buildEncoder(ClassElement classElement) {
+  Method _buildEncoder() {
     final obj = refer('obj');
     final block = BlockBuilder()
       ..statements.add(Code('if (object == null) { return null; }'))
@@ -56,20 +56,20 @@ class EntityGenerator {
       _fieldContexts.add(fieldContext);
 
       block.addExpression(obj
-          .index(literalString(fieldProperty.name ?? field.name))
-          .assign(CodeExpression(Code(
-              fieldContext.serialize(field.type, 'object.${field.name}')))));
+          .index(literalString(fieldProperty.name ?? field.displayName))
+          .assign(CodeExpression(Code(fieldContext.serialize(
+              field.type, 'object.${field.displayName}')))));
     }
 
     block.addExpression(obj.returned);
 
     return Method((b) => b
-      ..name = encodeMethod(classElement)
+      ..name = encodeMethod(_element)
       ..returns = refer('Map<String, dynamic>')
       ..requiredParameters.addAll([
         Parameter((pb) => pb
           ..name = 'object'
-          ..type = refer(classElement.displayName)),
+          ..type = refer(_element.displayName)),
         Parameter((pb) => pb
           ..name = 'inst'
           ..type = refer('Dartson', dartsonPackage))
@@ -77,11 +77,11 @@ class EntityGenerator {
       ..body = block.build());
   }
 
-  Method _buildDecoder(ClassElement classElement) {
+  Method _buildDecoder() {
     final block = BlockBuilder()
       ..statements.add(Code('if (data == null) { return null; }'))
       ..addExpression(
-          refer(classElement.displayName).newInstance([]).assignFinal('obj'));
+          refer(_element.displayName).newInstance([]).assignFinal('obj'));
 
     for (var field in _fields) {
       final fieldProperty = propertyAnnotation(field);
@@ -99,8 +99,8 @@ class EntityGenerator {
     block.addExpression(refer('obj').returned);
 
     return Method((b) => b
-      ..name = decodeMethod(classElement)
-      ..returns = refer(classElement.displayName)
+      ..name = decodeMethod(_element)
+      ..returns = refer(_element.displayName)
       ..requiredParameters.addAll([
         Parameter((pb) => pb
           ..name = 'data'

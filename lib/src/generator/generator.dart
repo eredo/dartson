@@ -10,7 +10,6 @@ import '../annotations.dart';
 import 'entity_type_helper.dart';
 import 'entity_generator.dart';
 import 'generator_settings.dart';
-import 'identifier.dart';
 import 'transformer_generator.dart';
 import 'serializer_generator.dart';
 
@@ -19,24 +18,19 @@ class SerializerGenerator extends GeneratorForAnnotation<Serializer> {
   FutureOr<String> generateForAnnotatedElement(
       Element element, ConstantReader annotation, BuildStep buildStep) {
     final settings = GeneratorSettings.fromConstant(annotation);
-    final trans = TransformerGenerator(settings.transformers);
-    final entityHelper = EntityTypeHelper(settings.entities);
+    final transformers = TransformerGenerator(settings.transformers);
+    final entities = EntityTypeHelper(settings.entities);
 
     final emitter = DartEmitter();
-    final str = StringBuffer();
+    final buffer = StringBuffer();
 
-    str.write(trans.build(emitter));
-    str.writeAll(settings.entities.values
-        .map((e) => EntityGenerator(e, trans, entityHelper).build(emitter)));
+    buffer.write(transformers.build(emitter));
+    buffer.writeAll(settings.entities.values
+        .map((e) => EntityGenerator(e, transformers, entities).build(emitter)));
 
-    str.write(
-        DartsonGenerator(settings.entities.values.toSet()).build(emitter));
-    str.write(refer(implementationIdentifier)
-        .newInstance([])
-        .assignFinal('_${element.name}$serializerIdentifier')
-        .statement
-        .accept(emitter));
+    buffer.write(DartsonGenerator(settings.entities.values.toSet(), element)
+        .build(emitter));
 
-    return DartFormatter().format(str.toString());
+    return DartFormatter().format(buffer.toString());
   }
 }

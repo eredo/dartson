@@ -5,6 +5,8 @@ import 'package:json_serializable/type_helper.dart';
 
 import '../exceptions.dart';
 
+/// Helper which looks up if a [DartType] has a [TypeTransformer] implementation
+/// defined and calls the encode/decode method on the [TypeTransformer].
 class TransformerGenerator implements TypeHelper {
   final Iterable<ClassElement> _transformers;
   final Map<DartType, _Transformer> _transformerRef = {};
