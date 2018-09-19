@@ -2,7 +2,7 @@ import 'serializer.dart';
 import 'my_class.dart';
 
 void usage() {
-  final myClass = MyClass()
+  final myClass = MyClass('test')
     ..name = 'test name'
     ..number = 29
     ..hasBoolean = true;

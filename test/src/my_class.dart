@@ -7,6 +7,7 @@ enum MyEnum { firstValue, secondValue }
 enum SecondEnum { has, nothing }
 
 class MyClass extends BaseClass {
+  final String finalProp;
   String name;
   int number;
   @Property(name: 'boolean')
@@ -22,6 +23,14 @@ class MyClass extends BaseClass {
   List<SubClass> subClasses;
   Map<String, SubClass> complexMap;
   MyAbstr replacement;
+  String _private;
+
+  MyClass(this.finalProp,
+      {this.ignored, @Property(name: 'private') String renamedPrivate})
+      : _private = renamedPrivate;
+
+  @Property(name: 'private')
+  String get privateGetter => _private;
 }
 
 class BaseClass {

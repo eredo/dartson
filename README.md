@@ -59,6 +59,10 @@ import 'my_class.dart';
 final Dartson<String> serializer = _serializer$dartson.useCodec(json);
 ```
 
+### Private properties
+
+It's not possible to encode / decode private properties. To set private properties, expose these within the constructor
+and provide a getter for encoding the entity.
 
 ### Encoding / decoding lists
 

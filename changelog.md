@@ -2,6 +2,11 @@
 
 ## 1.0.0-alpha+3
 
+- Add support for final properties
+- Add support to skip private properties
+- Add support for constructor arguments
+- Add support for getters
+
 **Breaking changes**
 - `DateTimeParser` is deprecated. The default is now the `json_serializable` implementation and it's no longer necessary
   to register a transformer at all.

@@ -6,6 +6,7 @@ import 'package:json_serializable/src/type_helpers/enum_helper.dart';
 import 'package:json_serializable/src/type_helpers/iterable_helper.dart';
 import 'package:json_serializable/src/type_helpers/map_helper.dart';
 
+import '../annotations.dart';
 import 'entity_type_helper.dart';
 import 'field_context.dart';
 import 'identifier.dart';
@@ -47,8 +48,9 @@ class EntityGenerator {
           .newInstance([]).assignFinal('obj'));
 
     for (var field in _fields) {
-      final fieldProperty = propertyAnnotation(field);
-      if (fieldProperty.ignore) {
+      final fieldProperty = propertyAnnotation(
+          field.getter.metadata.isNotEmpty ? field.getter : field);
+      if (field.isPrivate || fieldProperty.ignore) {
         continue;
       }
 
@@ -78,12 +80,59 @@ class EntityGenerator {
   }
 
   Method _buildDecoder() {
+    final constructorParameters = <Expression>[];
+    final constructorNamedParameters = <String, Expression>{};
+    final passedConstructorParameters = <String>[];
+
+    // Get constructor arguments.
+    final constructorArguments = _element.constructors?.first?.parameters ?? [];
+    for (var field in constructorArguments) {
+      Property fieldProperty;
+      if (field.isInitializingFormal) {
+        // Fetch details from matching field.
+        fieldProperty = propertyAnnotation(
+            _fields.firstWhere((fe) => fe.name == field.name));
+
+        passedConstructorParameters.add(field.displayName);
+      } else {
+        // Check for annotations.
+        fieldProperty = propertyAnnotation(field);
+      }
+
+      if (fieldProperty.ignore && field.isNotOptional) {
+        // TODO: Throw proper error.
+        throw 'NotOptional marked as ignored';
+      }
+
+      if (fieldProperty.ignore) {
+        continue;
+      }
+
+      final fieldContext = FieldContext(true, field.metadata, _helpers);
+      _fieldContexts.add(fieldContext);
+
+      final expression = CodeExpression(Code(fieldContext.deserialize(
+          field.type, 'data[\'${fieldProperty.name ?? field.displayName}\']')));
+      if (field.isPositional) {
+        constructorParameters.add(expression);
+      } else {
+        constructorNamedParameters[field.name] = expression;
+      }
+    }
+
     final block = BlockBuilder()
       ..statements.add(Code('if (data == null) { return null; }'))
-      ..addExpression(
-          refer(_element.displayName).newInstance([]).assignFinal('obj'));
+      ..addExpression(refer(_element.displayName)
+          .newInstance(constructorParameters, constructorNamedParameters)
+          .assignFinal('obj'));
 
     for (var field in _fields) {
+      if (field.isFinal ||
+          passedConstructorParameters.contains(field.name) ||
+          field.isPrivate) {
+        continue;
+      }
+
       final fieldProperty = propertyAnnotation(field);
       if (fieldProperty.ignore) {
         continue;

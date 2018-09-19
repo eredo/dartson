@@ -3,7 +3,7 @@ import 'package:analyzer/src/dart/resolver/inheritance_manager.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:dartson/dartson.dart';
 
-Property propertyAnnotation(FieldElement element) {
+Property propertyAnnotation(Element element) {
   final annotations = TypeChecker.fromRuntime(Property).annotationsOf(element);
   if (annotations.isEmpty) {
     return Property();

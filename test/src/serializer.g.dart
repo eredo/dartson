@@ -12,6 +12,7 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
     return null;
   }
   final obj = new Map<String, dynamic>();
+  obj['finalProp'] = object.finalProp;
   obj['name'] = object.name;
   obj['number'] = object.number;
   obj['boolean'] = object.hasBoolean;
@@ -26,6 +27,7 @@ Map<String, dynamic> _MyClass$encoder(MyClass object, Dartson inst) {
   obj['complexMap'] =
       object.complexMap?.map((k, e) => MapEntry(k, _SubClass$encoder(e, inst)));
   obj['replacement'] = _MyImpl$encoder(object.replacement, inst);
+  obj['private'] = object.privateGetter;
   obj['inherited'] = object.inherited;
   obj['inheritName'] = object.inheritedRenamed;
   return obj;
@@ -35,7 +37,8 @@ MyClass _MyClass$decoder(Map<String, dynamic> data, Dartson inst) {
   if (data == null) {
     return null;
   }
-  final obj = new MyClass();
+  final obj = new MyClass(data['finalProp'] as String,
+      renamedPrivate: data['private'] as String);
   obj.name = data['name'] as String;
   obj.number = data['number'] as int;
   obj.hasBoolean = data['boolean'] as bool;

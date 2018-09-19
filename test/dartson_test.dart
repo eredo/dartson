@@ -32,7 +32,7 @@ void main() {
     });
 
     test('should encode the object', () {
-      final result = serializer.encode(MyClass()
+      final result = serializer.encode(MyClass('test')
         ..name = 'hello'
         ..numDouble = 1.0
         ..subClass = (SubClass()..name = 'test'));
@@ -53,7 +53,7 @@ void main() {
     });
 
     test('should encode lists', () {
-      final result = serializer.encode(MyClass()
+      final result = serializer.encode(MyClass('test')
         ..subClasses = [
           SubClass()
             ..name = '1'
@@ -91,7 +91,7 @@ void main() {
     });
 
     test('should encode maps', () {
-      final result = serializer.encode(MyClass()
+      final result = serializer.encode(MyClass('test')
         ..complexMap = {
           't1': SubClass()..name = 't1',
           't2': SubClass()..name = 't2',
@@ -116,8 +116,8 @@ void main() {
     });
 
     test('should encode replacements', () {
-      final result =
-          serializer.encode(MyClass()..replacement = (MyImpl()..name = 'test'));
+      final result = serializer
+          .encode(MyClass('test')..replacement = (MyImpl()..name = 'test'));
       expect(result['replacement']['name'], 'test');
     });
 
@@ -161,8 +161,8 @@ void main() {
 
     test('should encode lists', () {
       final result = serializer.encodeList([
-        MyClass()..name = 'test1',
-        MyClass()..name = 'test2',
+        MyClass('test')..name = 'test1',
+        MyClass('test')..name = 'test2',
       ]) as List<Map<String, dynamic>>;
 
       expect(result, allOf(isList, hasLength(2)));
