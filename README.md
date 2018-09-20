@@ -3,7 +3,8 @@
 [![Build Status](https://travis-ci.org/eredo/dartson.svg?branch=master)](https://travis-ci.org/eredo/dartson)
 [![Coverage Status](https://coveralls.io/repos/github/eredo/dartson/badge.svg)](https://coveralls.io/github/eredo/dartson)
 
-**Dartson 1.0.0 is currently in alpha. The public API might be subject to change.**
+**Dartson 1.0.0 is currently in alpha. The public API might be subject to change. For further details of 
+potential breaks and a roadmap take a look at [project 1.0.0](https://github.com/eredo/dartson/projects/1).**
 
 Dartson is a dart library which converts Dart Objects into their JSON representation. It helps you keep your code clean
 of `fromJSON` and `toJSON` functions by providing a builder which generates the serialization methods.

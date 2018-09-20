@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0-alpha+3
+## 1.0.0-alpha+3 (09/20/2018)
 
 - Add support for final properties
 - Add support to skip private properties

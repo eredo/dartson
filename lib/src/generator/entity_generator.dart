@@ -7,6 +7,7 @@ import 'package:json_serializable/src/type_helpers/iterable_helper.dart';
 import 'package:json_serializable/src/type_helpers/map_helper.dart';
 
 import '../annotations.dart';
+import '../exceptions.dart';
 import 'entity_type_helper.dart';
 import 'field_context.dart';
 import 'identifier.dart';
@@ -100,8 +101,7 @@ class EntityGenerator {
       }
 
       if (fieldProperty.ignore && field.isNotOptional) {
-        // TODO: Throw proper error.
-        throw 'NotOptional marked as ignored';
+        throw NotOptionalArgumentIgnoredException(field, _element);
       }
 
       if (fieldProperty.ignore) {
