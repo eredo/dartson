@@ -1,5 +1,5 @@
 name: dartson
-version: 1.0.0-alpha+3
+version: 1.0.0-alpha+4
 
 author: Eric Schneller <eric@schnellers.name>
 description: Dartson is a Dart library that can be used to serialize Dart objects into a JSON string and vice versa. It uses the new builder infrastructure.
@@ -10,7 +10,7 @@ environment:
 
 dependencies:
   analyzer: ^0.32.2
-  build: ^0.12.6
+  build: '>=0.12.6 <2.0.0'
   build_config: '>=0.2.6 <0.4.0'
   meta: ^1.1.0
   source_gen: ^0.9.0

@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.0-alpha+4 (09/26/2018)
+
+- Support `pkg:build` 1.X
+
 ## 1.0.0-alpha+3 (09/20/2018)
 
 - Add support for final properties
