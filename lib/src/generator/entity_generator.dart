@@ -55,7 +55,8 @@ class EntityGenerator {
         continue;
       }
 
-      final fieldContext = FieldContext(true, field.metadata, _helpers);
+      final fieldContext =
+          FieldContext(true, field.metadata, _helpers, _element, field);
       _fieldContexts.add(fieldContext);
 
       block.addExpression(obj
@@ -108,7 +109,9 @@ class EntityGenerator {
         continue;
       }
 
-      final fieldContext = FieldContext(true, field.metadata, _helpers);
+      // TODO: Check how to handle pure property fields.
+      final fieldContext =
+          FieldContext(true, field.metadata, _helpers, _element, null);
       _fieldContexts.add(fieldContext);
 
       final expression = CodeExpression(Code(fieldContext.deserialize(
@@ -137,7 +140,8 @@ class EntityGenerator {
       if (fieldProperty.ignore) {
         continue;
       }
-      final fieldContext = FieldContext(true, field.metadata, _helpers);
+      final fieldContext =
+          FieldContext(true, field.metadata, _helpers, _element, field);
       _fieldContexts.add(fieldContext);
 
       block.addExpression(refer('obj').property(field.displayName).assign(

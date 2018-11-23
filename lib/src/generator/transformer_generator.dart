@@ -40,7 +40,7 @@ class TransformerGenerator implements TypeHelper {
 
   @override
   String deserialize(
-      DartType targetType, String expression, DeserializeContext context) {
+      DartType targetType, String expression, TypeHelperContext context) {
     final transformer = _transformerRef[targetType];
     if (transformer == null) {
       return null;
@@ -52,7 +52,7 @@ class TransformerGenerator implements TypeHelper {
 
   @override
   String serialize(
-      DartType targetType, String expression, SerializeContext context) {
+      DartType targetType, String expression, TypeHelperContext context) {
     final transformer = _transformerRef[targetType];
     if (transformer == null) {
       return null;

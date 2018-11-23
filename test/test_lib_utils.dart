@@ -9,7 +9,7 @@ Future<Map<String, dynamic>> resolveTestProject(String sourceDirectory,
   var fileMap = Map<String, String>.fromEntries(files.map((f) =>
       MapEntry('test_lib|lib/${p.basename(f.path)}', f.readAsStringSync())));
 
-  final libFiles = libFilePaths.map((f) => new File(f));
+  final libFiles = libFilePaths.map((f) => File(f));
   fileMap.addAll(Map<String, String>.fromEntries(libFiles.map((f) => MapEntry(
       'dartson|lib/${p.relative(f.path, from: libDirectory)}',
       f.readAsStringSync()))));

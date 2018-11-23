@@ -14,7 +14,7 @@ class EntityTypeHelper implements TypeHelper {
 
   @override
   String deserialize(
-      DartType targetType, String expression, DeserializeContext context) {
+      DartType targetType, String expression, TypeHelperContext context) {
     final target = targetType.element as ClassElement;
     if (!_entities.containsKey(target)) {
       return null;
@@ -25,7 +25,7 @@ class EntityTypeHelper implements TypeHelper {
 
   @override
   String serialize(
-      DartType targetType, String expression, SerializeContext context) {
+      DartType targetType, String expression, TypeHelperContext context) {
     final target = targetType.element as ClassElement;
     if (!_entities.containsKey(target)) {
       return null;

@@ -14,7 +14,7 @@ LibraryReader elLibrary;
 
 void main() async {
   group('SerializerGenerator', () {
-    final generator = new SerializerGenerator();
+    final generator = SerializerGenerator();
 
     test('should detect the property', () async {
       final libPath = testFilePath('lib');

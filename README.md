@@ -15,7 +15,7 @@ Add the following lines to your `pubspec.yaml` in order to use dartson:
 
 ```
 dependencies:
-  dartson: ^1.0.0-alpha+2
+  dartson: ^1.0.0-alpha+4
   
 dev_dependencies:
   build_runner: ^0.10.0

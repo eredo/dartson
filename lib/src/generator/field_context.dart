@@ -1,16 +1,21 @@
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
+import 'package:json_annotation/src/json_serializable.dart';
 import 'package:json_serializable/type_helper.dart';
+import 'package:json_serializable/src/type_helper.dart';
 
 /// Provides the serialization methods for a field using [TypeHelper]s which are
 /// standard [TypeHelper], entities or transformers.
-class FieldContext implements DeserializeContext, SerializeContext {
+class FieldContext implements TypeHelperContextWithConfig {
   final bool nullable;
   final List<ElementAnnotation> metadata;
   final Iterable<TypeHelper> helpers;
   final List<String> members = [];
+  final ClassElement classElement;
+  final FieldElement fieldElement;
 
-  FieldContext(this.nullable, this.metadata, this.helpers);
+  FieldContext(this.nullable, this.metadata, this.helpers, this.classElement,
+      this.fieldElement);
 
   @override
   void addMember(String memberContent) {
@@ -31,9 +36,19 @@ class FieldContext implements DeserializeContext, SerializeContext {
           orElse: () => throw UnsupportedTypeError(
               fieldType, expression, _notSupportedTypeMessage));
 
-  // TODO: Add proper implementation.
   @override
-  bool get useWrappers => false;
+  JsonSerializable get config => JsonSerializable(
+        anyMap: false,
+        checked: false,
+        createFactory: false,
+        createToJson: false,
+        disallowUnrecognizedKeys: false,
+        explicitToJson: false,
+        includeIfNull: true,
+        generateToJsonFunction: true,
+        nullable: true,
+        useWrappers: false,
+      );
 }
 
 final _notSupportedTypeMessage = 'UnsupportedTypeError: None of the provided '

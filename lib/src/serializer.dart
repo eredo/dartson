@@ -100,12 +100,12 @@ class Dartson<R> {
   /// Takes the entities of the [instance] and adds the entities of this instance
   /// and use the [_codec] of this instance.
   Dartson<R> extend(Dartson instance) =>
-      new Dartson<R>({}..addAll(instance._entities)..addAll(_entities),
+      Dartson<R>({}..addAll(instance._entities)..addAll(_entities),
           codec: _codec);
 
   /// Returns a new [Dartson] instance using the provided [codec].
   Dartson<S> useCodec<S>(Codec<Object, S> codec) =>
-      new Dartson<S>({}..addAll(_entities), codec: codec);
+      Dartson<S>({}..addAll(_entities), codec: codec);
 
   DartsonEntity<T> _getEntity<T>(Type type) {
     if (!_entities.containsKey(type)) {
